@@ -1,97 +1,265 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# WardrobeAI - Production Ready React Native App
 
-# Getting Started
+A production-ready React Native application with complete setup for navigation, state management, styling, and more.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 📦 Installed Packages
 
-## Step 1: Start Metro
+### Navigation
+- `@react-navigation/native` - Core navigation library
+- `@react-navigation/bottom-tabs` - Bottom tab navigation
+- `@react-navigation/native-stack` - Native stack navigation
+- `react-native-screens` - Native screen components
+- `react-native-safe-area-context` - Safe area handling
+- `react-native-gesture-handler` - Gesture handling
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### State Management
+- `@reduxjs/toolkit` - Redux state management
+- `react-redux` - React bindings for Redux
+- `redux-persist` - Persist Redux state
+- `@react-native-async-storage/async-storage` - Local storage
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Networking
+- `axios` - HTTP client
 
-```sh
-# Using npm
-npm start
+### Styling
+- `nativewind` - TailwindCSS for React Native
+- `tailwindcss` - CSS framework
 
-# OR using Yarn
-yarn start
+### Icons & Animations
+- `lucide-react-native` - Icon library
+- `react-native-svg` - SVG support
+- `lottie-react-native` - Lottie animations
+- `moti` - Animation library
+- `react-native-reanimated` - Reanimated library
+
+### Environment
+- `react-native-dotenv` - Environment variables
+
+## 📁 Folder Structure
+
+```
+wardrobeai/
+├── src/
+│   ├── components/          # Reusable components
+│   ├── screens/             # Screen components
+│   │   ├── HomeScreen.tsx
+│   │   ├── ExploreScreen.tsx
+│   │   ├── WardrobeScreen.tsx
+│   │   └── ProfileScreen.tsx
+│   ├── navigation/          # Navigation setup
+│   │   ├── RootNavigator.tsx
+│   │   ├── BottomTabNavigator.tsx
+│   │   └── types.ts
+│   ├── store/               # Redux store
+│   │   ├── index.ts
+│   │   ├── slices/
+│   │   │   ├── authSlice.ts
+│   │   │   └── userSlice.ts
+│   │   └── middleware/
+│   ├── services/            # API services
+│   │   └── api.service.ts
+│   ├── utils/               # Utility functions
+│   │   ├── helpers.ts
+│   │   └── storage.ts
+│   ├── hooks/               # Custom hooks
+│   │   └── useRedux.ts
+│   ├── constants/           # Constants
+│   │   ├── theme.ts
+│   │   └── api.ts
+│   ├── types/               # TypeScript types
+│   │   ├── env.d.ts
+│   │   └── nativewind.d.ts
+│   └── assets/              # Static assets
+│       ├── images/
+│       ├── animations/
+│       └── fonts/
+├── .env                     # Environment variables
+├── .env.example             # Environment template
+├── tailwind.config.js       # TailwindCSS config
+├── babel.config.js          # Babel config
+└── App.tsx                  # Root component
 ```
 
-## Step 2: Build and run your app
+## 🚀 Getting Started
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Install iOS Pods (iOS only)
+```bash
+cd ios && pod install && cd ..
+```
+
+### 3. Configure Environment Variables
+Copy `.env.example` to `.env` and update with your values:
+```bash
+cp .env.example .env
+```
+
+### 4. Run the App
+
+**Android:**
+```bash
+npm run android
+```
+
+**iOS:**
+```bash
+npm run ios
+```
+
+## 🎨 Styling with NativeWind
+
+This project uses NativeWind (TailwindCSS for React Native). Use className prop:
+
+```tsx
+<View className="flex-1 bg-white p-4">
+  <Text className="text-2xl font-bold text-gray-900">Hello</Text>
+</View>
+```
+
+## 🔄 Redux Usage
+
+### Using Redux Hooks
+```tsx
+import { useAppSelector, useAppDispatch } from './src/hooks/useRedux';
+import { setUser } from './src/store/slices/userSlice';
+
+const MyComponent = () => {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(state => state.user.currentUser);
+  
+  const handleLogin = () => {
+    dispatch(setUser({ id: '1', name: 'John', email: 'john@example.com' }));
+  };
+};
+```
+
+## 🌐 API Calls
+
+### Using API Service
+```tsx
+import apiService from './src/services/api.service';
+
+const fetchData = async () => {
+  try {
+    const response = await apiService.get('/endpoint');
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+```
+
+## 🧭 Navigation
+
+### Navigate Between Screens
+```tsx
+import { useNavigation } from '@react-navigation/native';
+
+const MyComponent = () => {
+  const navigation = useNavigation();
+  
+  const goToProfile = () => {
+    navigation.navigate('Profile');
+  };
+};
+```
+
+## 📱 Bottom Tab Navigation
+
+The app includes a bottom tab navigator with 4 tabs:
+- **Home** - Main dashboard
+- **Explore** - Discover content
+- **Wardrobe** - Manage items
+- **Profile** - User profile
+
+## 🔐 Environment Variables
+
+Available environment variables in `.env`:
+- `API_BASE_URL` - API base URL
+- `API_TIMEOUT` - API timeout in milliseconds
+- `APP_NAME` - Application name
+- `APP_VERSION` - Application version
+- `ENABLE_ANALYTICS` - Enable/disable analytics
+- `ENABLE_CRASH_REPORTING` - Enable/disable crash reporting
+- `DEBUG_MODE` - Enable/disable debug mode
+
+## 🎭 Icons
+
+Using Lucide React Native icons:
+```tsx
+import { Home, User, Settings } from 'lucide-react-native';
+
+<Home color="#000" size={24} />
+```
+
+## 🎬 Animations
+
+### Lottie Animations
+```tsx
+import LottieView from 'lottie-react-native';
+
+<LottieView
+  source={require('./assets/animations/loading.json')}
+  autoPlay
+  loop
+/>
+```
+
+### Moti Animations
+```tsx
+import { MotiView } from 'moti';
+
+<MotiView
+  from={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ type: 'timing', duration: 1000 }}
+>
+  <Text>Animated Content</Text>
+</MotiView>
+```
+
+## 📝 Scripts
+
+- `npm start` - Start Metro bundler
+- `npm run android` - Run on Android
+- `npm run ios` - Run on iOS
+- `npm run lint` - Run ESLint
+- `npm test` - Run tests
+
+## 🏗️ Building for Production
 
 ### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+cd android
+./gradlew assembleRelease
 ```
 
 ### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```bash
+cd ios
+xcodebuild -workspace WardrobeAI.xcworkspace -scheme WardrobeAI -configuration Release
 ```
 
-Then, and every time you update your native dependencies, run:
+## 📚 Additional Resources
 
-```sh
-bundle exec pod install
-```
+- [React Native Documentation](https://reactnative.dev/)
+- [React Navigation](https://reactnavigation.org/)
+- [Redux Toolkit](https://redux-toolkit.js.org/)
+- [NativeWind](https://www.nativewind.dev/)
+- [Lucide Icons](https://lucide.dev/)
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 🤝 Contributing
 
-```sh
-# Using npm
-npm run ios
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-# OR using Yarn
-yarn ios
-```
+## 📄 License
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+This project is licensed under the MIT License.
