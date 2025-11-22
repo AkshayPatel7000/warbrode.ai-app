@@ -4,7 +4,7 @@ import { LucideIcon } from 'lucide-react-native';
 
 interface CategoryChipProps {
   label: string;
-  icon?: LucideIcon;
+  icon?: LucideIcon | React.ComponentType<{ size?: number; color?: string }>;
   isSelected?: boolean;
   onPress?: () => void;
 }
@@ -25,11 +25,12 @@ const CategoryChip: React.FC<CategoryChipProps> = ({
       }`}
       activeOpacity={0.7}>
       {Icon && (
-        <Icon
-          size={18}
-          color={isSelected ? '#0f172a' : '#64748b'}
-          style={{ marginRight: 6 }}
-        />
+        <View style={{ marginRight: 6 }}>
+          <Icon
+            size={18}
+            color={isSelected ? '#0f172a' : '#64748b'}
+          />
+        </View>
       )}
       <Text
         className={`text-sm font-semibold ${

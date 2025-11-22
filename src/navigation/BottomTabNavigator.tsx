@@ -8,7 +8,7 @@ import CustomTabBar from '../components/CustomTabBar';
 import HomeScreen from '../screens/HomeScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import CreateScreen from '../screens/CreateScreen';
-import WardrobeScreen from '../screens/WardrobeScreen';
+import WardrobeStackNavigator from './WardrobeStackNavigator';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -45,7 +45,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="Wardrobe"
-        component={WardrobeScreen}
+        component={WardrobeStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
             <ShoppingBag color={color} size={size} />

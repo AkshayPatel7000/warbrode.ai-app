@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Text } from 'react-native';
 import {
-  Shirt,
   Footprints,
+  Shirt,
 } from 'lucide-react-native';
 import {
   WardrobeHeader,
@@ -12,6 +12,11 @@ import {
   EmptyWardrobe,
 } from '../components/wardrobe';
 import Container from '../components/Container';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { WardrobeStackParamList } from '../navigation/types';
+import { ShirtIcon, TShirtIcon, JeansIcon } from '../components/icons/ClothingIcons';
+
+type Props = NativeStackScreenProps<WardrobeStackParamList, 'WardrobeMain'>;
 
 // Mock data - replace with actual data from Redux/API
 const MOCK_CLOTHING_ITEMS = [
@@ -51,13 +56,13 @@ const MOCK_CLOTHING_ITEMS = [
 
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: undefined },
-  { id: 'shirts', label: 'Shirts', icon: Shirt },
+  { id: 'shirts', label: 'Shirts', icon: ShirtIcon },
   { id: 't-shirts', label: 'T-Shirts', icon: Shirt },
-  { id: 'jeans', label: 'Jeans', icon: Shirt },
+  { id: 'jeans', label: 'Jeans', icon: JeansIcon },
   { id: 'shoes', label: 'Shoes', icon: Footprints },
 ];
 
-const WardrobeScreen = () => {
+const WardrobeScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploadSheetVisible, setUploadSheetVisible] = useState(false);
   
@@ -83,8 +88,7 @@ const WardrobeScreen = () => {
   };
 
   const handleClothingPress = (id: string) => {
-    console.log('Clothing item pressed:', id);
-    // TODO: Navigate to clothing detail screen
+    navigation.navigate('ClothingDetails', { itemId: id });
   };
 
   return (

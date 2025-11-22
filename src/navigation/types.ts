@@ -19,3 +19,11 @@ export type BottomTabParamList = {
   Wardrobe: undefined;
   Profile: undefined;
 };
+
+export type WardrobeStackParamList = {
+  WardrobeMain: undefined;
+  ClothingDetails: {
+    itemId: string;
+  };
+};
+
