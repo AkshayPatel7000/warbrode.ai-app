@@ -1,15 +1,15 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {RootStackParamList} from './types';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RootStackParamList } from './types';
 import BottomTabNavigator from './BottomTabNavigator';
 import AuthNavigator from './AuthNavigator';
-import {useAppSelector} from '../hooks/useRedux';
+import { useAppSelector } from '../hooks/useRedux';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const RootNavigator = () => {
-  const {isAuthenticated} = useAppSelector(state => state.auth);
+  const { isAuthenticated } = useAppSelector(state => state.auth);
 
   return (
     <NavigationContainer>
@@ -17,7 +17,7 @@ const RootNavigator = () => {
         screenOptions={{
           headerShown: false,
         }}>
-        {!isAuthenticated ? (
+        {isAuthenticated ? (
           <Stack.Screen name="AuthStack" component={AuthNavigator} />
         ) : (
           <Stack.Screen name="MainTabs" component={BottomTabNavigator} />

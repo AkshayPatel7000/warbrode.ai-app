@@ -43,13 +43,16 @@ const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
 
   const renderSlide = ({ item }: { item: Slide }) => (
     <View className="px-5" style={{ width: SCREEN_WIDTH }}>
-      <View className="bg-white rounded-3xl p-6 shadow-sm shadow-slate-200/50">
+      <View className="flex-1 bg-white rounded-3xl p-6 shadow-sm shadow-slate-200/50 justify-between">
         {/* Illustration placeholder */}
-        <View className="h-40 rounded-2xl bg-slate-100 items-center justify-center">
+        <View className="flex-1 rounded-2xl bg-slate-100 items-center justify-center">
           <Text className="text-6xl">📱</Text>
         </View>
-        <Text className="mt-4 text-lg font-semibold text-slate-900">{item.title}</Text>
-        <Text className="mt-2 text-sm text-slate-500 leading-5">{item.description}</Text>
+        <View>
+
+          <Text className="mt-4 text-lg font-semibold text-slate-900">{item.title}</Text>
+          <Text className="mt-2 text-sm text-slate-500 leading-5">{item.description}</Text>
+        </View>
       </View>
     </View>
   );
@@ -69,7 +72,7 @@ const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
   );
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 pb-6">
       <FlatList
         ref={flatListRef}
         data={slides}

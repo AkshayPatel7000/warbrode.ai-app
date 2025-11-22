@@ -1,7 +1,8 @@
-import React, {useState} from 'react';
-import {View, Text, StyleSheet, SafeAreaView} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {AuthButton, AuthInput, AuthCard} from '../../components/auth';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { AuthButton, AuthInput, AuthCard } from '../../components/auth';
+import Container from '../../components/Container';
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation<any>();
@@ -44,68 +45,70 @@ const ForgotPasswordScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Forgot Password</Text>
-        <Text style={styles.subtitle}>
-          {success
-            ? 'Check your email for a reset link'
-            : 'Enter your email to receive a password reset link'}
-        </Text>
+    <Container>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Forgot Password</Text>
+          <Text style={styles.subtitle}>
+            {success
+              ? 'Check your email for a reset link'
+              : 'Enter your email to receive a password reset link'}
+          </Text>
 
-        <AuthCard style={styles.card}>
-          {!success ? (
-            <>
-              <AuthInput
-                label="Email"
-                placeholder="you@example.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                error={error}
-              />
-              <AuthButton
-                variant="primary"
-                label="Send reset link"
-                onPress={handleSendResetLink}
-                loading={loading}
-              />
-            </>
-          ) : (
-            <View style={styles.successContent}>
-              <Text style={styles.successText}>
-                We've sent a password reset link to{' '}
-                <Text style={styles.emailText}>{email}</Text>
-              </Text>
-              <Text style={styles.checkEmailText}>
-                Please check your email and follow the instructions to reset
-                your password.
-              </Text>
-
-              <View style={styles.successButtons}>
-                <AuthButton
-                  variant="outline"
-                  label="Resend"
-                  onPress={handleResend}
+          <AuthCard className={"mt-6 gap-4"}>
+            {!success ? (
+              <View className='gap-3'>
+                <AuthInput
+                  label="Email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  error={error}
                 />
                 <AuthButton
                   variant="primary"
-                  label="Back to login"
-                  onPress={handleBackToLogin}
+                  label="Send reset link"
+                  onPress={handleSendResetLink}
+                  loading={loading}
                 />
               </View>
-            </View>
-          )}
-        </AuthCard>
-      </View>
-    </SafeAreaView>
+            ) : (
+              <View style={styles.successContent}>
+                <Text style={styles.successText}>
+                  We've sent a password reset link to{' '}
+                  <Text style={styles.emailText}>{email}</Text>
+                </Text>
+                <Text style={styles.checkEmailText}>
+                  Please check your email and follow the instructions to reset
+                  your password.
+                </Text>
+
+                <View style={styles.successButtons}>
+                  <AuthButton
+                    variant="outline"
+                    label="Resend"
+                    onPress={handleResend}
+                  />
+                  <AuthButton
+                    variant="primary"
+                    label="Back to login"
+                    onPress={handleBackToLogin}
+                  />
+                </View>
+              </View>
+            )}
+          </AuthCard>
+        </View>
+      </SafeAreaView>
+    </Container>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc', // slate-50
   },
   content: {
     flex: 1,

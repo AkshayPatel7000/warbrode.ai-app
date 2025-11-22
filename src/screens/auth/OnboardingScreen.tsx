@@ -3,6 +3,7 @@ import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import OnboardingCarousel from '../../components/auth/OnboardingCarousel';
+import Container from '../../components/Container';
 
 const OnboardingScreen = () => {
   const navigation = useNavigation<any>();
@@ -37,33 +38,28 @@ const OnboardingScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Gradient Header */}
-      <View style={styles.header}>
-        <LinearGradient
-          colors={['#d9f99d', '#a3e635']} // lime-200 to lime-400
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
-        />
-      </View>
+    <Container>
+      <SafeAreaView style={styles.container}>
+        {/* Gradient Header */}
 
-      {/* Content Area */}
-      <View style={styles.content}>
-        <OnboardingCarousel
-          slides={slides}
-          onSkip={handleSkip}
-          onDone={handleDone}
-        />
-      </View>
-    </SafeAreaView>
+
+        {/* Content Area */}
+        <View style={styles.content} >
+          <OnboardingCarousel
+            slides={slides}
+            onSkip={handleSkip}
+            onDone={handleDone}
+          />
+        </View>
+      </SafeAreaView>
+    </Container>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc', // slate-50
   },
   header: {
     height: 160,
@@ -76,8 +72,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    marginTop: -64, // Overlap effect
-    paddingHorizontal: 20,
+
   },
 });
 
