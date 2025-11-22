@@ -5,6 +5,16 @@ module.exports = {
   ],
   plugins: [
     [
+        'module-resolver',
+        {
+          root: ['./'],
+          alias: {
+            'moti/skeleton': 'moti/skeleton/react-native-linear-gradient',
+          },
+        },
+      ],
+    
+    [
       'module:react-native-dotenv',
       {
         moduleName: '@env',
