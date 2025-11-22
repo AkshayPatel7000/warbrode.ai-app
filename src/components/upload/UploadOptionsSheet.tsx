@@ -20,12 +20,14 @@ const UploadOptionsSheet: React.FC<UploadOptionsSheetProps> = ({
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}>
+      onRequestClose={onClose}
+    >
       <TouchableOpacity
         activeOpacity={1}
         onPress={onClose}
-        className="flex-1 justify-end bg-black/50">
-        <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+        className="flex-1 justify-end bg-black/50"
+      >
+        <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
           <View className="bg-white rounded-t-3xl px-5 pt-2 pb-8">
             {/* Handle Bar */}
             <View className="items-center py-2">
@@ -46,7 +48,8 @@ const UploadOptionsSheet: React.FC<UploadOptionsSheetProps> = ({
                   onClose();
                 }}
                 activeOpacity={0.8}
-                className="flex-row items-center bg-lime-400 rounded-2xl p-4 shadow-sm">
+                className="flex-row items-center bg-lime-400 rounded-2xl p-4 shadow-sm"
+              >
                 <View className="w-12 h-12 rounded-full bg-white/30 items-center justify-center mr-4">
                   <Camera size={24} color="#0f172a" />
                 </View>
@@ -67,7 +70,8 @@ const UploadOptionsSheet: React.FC<UploadOptionsSheetProps> = ({
                   onClose();
                 }}
                 activeOpacity={0.8}
-                className="flex-row items-center bg-white border-2 border-slate-200 rounded-2xl p-4">
+                className="flex-row items-center bg-white border-2 border-slate-200 rounded-2xl p-4"
+              >
                 <View className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center mr-4">
                   <ImageIcon size={24} color="#64748b" />
                 </View>

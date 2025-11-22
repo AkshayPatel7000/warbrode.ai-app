@@ -1,15 +1,15 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Search, Plus, ShoppingBag, User } from 'lucide-react-native';
-import { BottomTabParamList } from './types';
+import { Home, Plus, Search, ShoppingBag, User } from 'lucide-react-native';
+import React from 'react';
 import CustomTabBar from '../components/CustomTabBar';
+import { BottomTabParamList } from './types';
 
 // Import screens
-import HomeScreen from '../screens/HomeScreen';
 import ExploreScreen from '../screens/ExploreScreen';
-import CreateScreen from '../screens/CreateScreen';
-import WardrobeStackNavigator from './WardrobeStackNavigator';
+import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import WardrobeScreen from '../screens/WardrobeScreen';
+import CreateStackNavigator from './CreateStackNavigator';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -17,11 +17,9 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="Home"
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}>
-
+      screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}
+      tabBar={props => <CustomTabBar {...props} />}
+    >
       <Tab.Screen
         name="Explore"
         component={ExploreScreen}
@@ -31,7 +29,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="Create"
-        component={CreateScreen}
+        component={CreateStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => <Plus color={color} size={size} />,
         }}
@@ -45,7 +43,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="Wardrobe"
-        component={WardrobeStackNavigator}
+        component={WardrobeScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <ShoppingBag color={color} size={size} />
@@ -64,4 +62,3 @@ const BottomTabNavigator = () => {
 };
 
 export default BottomTabNavigator;
-

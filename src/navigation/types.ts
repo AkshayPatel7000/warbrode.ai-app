@@ -10,6 +10,20 @@ export type RootStackParamList = {
   MainTabs: undefined;
   Profile: undefined;
   Settings: undefined;
+  ReviewClothing: {
+    itemId: string;
+    data: {
+      name: string;
+      type: string;
+      color: string;
+      pattern: string;
+      tags: string[];
+    };
+    imageUri: string;
+  };
+  ClothingDetails: {
+    itemId: string;
+  };
 };
 
 export type BottomTabParamList = {
@@ -22,8 +36,9 @@ export type BottomTabParamList = {
 
 export type WardrobeStackParamList = {
   WardrobeMain: undefined;
-  ClothingDetails: {
-    itemId: string;
-  };
 };
 
+export type CreateStackParamList = {
+  CreateMain: undefined;
+  UploadStatus: undefined;
+};

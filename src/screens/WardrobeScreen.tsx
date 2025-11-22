@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
-  Footprints,
-  Shirt,
-} from 'lucide-react-native';
+  View,
+  FlatList,
+  TouchableOpacity,
+  Text,
+  ListRenderItem,
+} from 'react-native';
+import { Footprints, Shirt } from 'lucide-react-native';
 import {
   WardrobeHeader,
   CategoryChip,
@@ -14,9 +17,20 @@ import {
 import Container from '../components/Container';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WardrobeStackParamList } from '../navigation/types';
-import { ShirtIcon, TShirtIcon, JeansIcon } from '../components/icons/ClothingIcons';
+import {
+  ShirtIcon,
+  TShirtIcon,
+  JeansIcon,
+} from '../components/icons/ClothingIcons';
 
-type Props = NativeStackScreenProps<WardrobeStackParamList, 'WardrobeMain'>;
+interface ClothingItem {
+  id: string;
+  name: string;
+  category: string;
+  imageUrl?: string;
+  lastWorn: string;
+  tags: string[];
+}
 
 // Mock data - replace with actual data from Redux/API
 const MOCK_CLOTHING_ITEMS = [
@@ -62,96 +76,132 @@ const CATEGORIES = [
   { id: 'shoes', label: 'Shoes', icon: Footprints },
 ];
 
-const WardrobeScreen: React.FC<Props> = ({ navigation }) => {
+const WardrobeScreen = ({ navigation }: any) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploadSheetVisible, setUploadSheetVisible] = useState(false);
-  
+
   // For demo purposes, set to empty array to show empty state
   // Change to MOCK_CLOTHING_ITEMS to see the grid
-  const [clothingItems] = useState(MOCK_CLOTHING_ITEMS);
+  const [clothingItems] = useState<ClothingItem[]>(MOCK_CLOTHING_ITEMS);
 
-  const filteredItems =
-    selectedCategory === 'all'
-      ? clothingItems
-      : clothingItems.filter(
-          item => item.category.toLowerCase() === selectedCategory
-        );
+  const filteredItems = useMemo(
+    () =>
+      selectedCategory === 'all'
+        ? clothingItems
+        : clothingItems.filter(
+            item => item.category.toLowerCase() === selectedCategory,
+          ),
+    [selectedCategory, clothingItems],
+  );
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = useCallback(() => {
     console.log('Take photo');
     // TODO: Implement camera functionality
-  };
+  }, []);
 
-  const handleUploadPhoto = () => {
+  const handleUploadPhoto = useCallback(() => {
     console.log('Upload photo');
     // TODO: Implement gallery picker
-  };
+  }, []);
 
-  const handleClothingPress = (id: string) => {
-    navigation.navigate('ClothingDetails', { itemId: id });
-  };
+  const handleClothingPress = useCallback(
+    (id: string) => {
+      navigation.navigate('ClothingDetails', { itemId: id });
+    },
+    [navigation],
+  );
+
+  const renderCategoryChip = useCallback(
+    ({ item: category }: { item: (typeof CATEGORIES)[0] }) => (
+      <CategoryChip
+        label={category.label}
+        icon={category.icon}
+        isSelected={selectedCategory === category.id}
+        onPress={() => setSelectedCategory(category.id)}
+      />
+    ),
+    [selectedCategory],
+  );
+
+  const renderClothingItem: ListRenderItem<ClothingItem> = useCallback(
+    ({ item, index }) => (
+      <View
+        className="w-[48%]"
+        style={{ marginBottom: 12, marginRight: index % 2 === 0 ? 12 : 0 }}
+      >
+        <ClothingCard
+          id={item.id}
+          name={item.name}
+          category={item.category}
+          imageUrl={item.imageUrl}
+          lastWorn={item.lastWorn}
+          tags={item.tags}
+          onPress={() => handleClothingPress(item.id)}
+          onLongPress={() => console.log('Long press:', item.id)}
+        />
+      </View>
+    ),
+    [handleClothingPress],
+  );
+
+  const keyExtractor = useCallback((item: ClothingItem) => item.id, []);
+  const categoryKeyExtractor = useCallback(
+    (item: (typeof CATEGORIES)[0]) => item.id,
+    [],
+  );
+
+  const renderListHeader = useCallback(
+    () => (
+      <>
+        {/* Header */}
+        <WardrobeHeader
+          itemCount={clothingItems.length}
+          onAddPress={() => setUploadSheetVisible(true)}
+        />
+
+        {clothingItems.length > 0 && (
+          /* Category Chips */
+          <View className="mb-4">
+            <FlatList
+              horizontal
+              data={CATEGORIES}
+              renderItem={renderCategoryChip}
+              keyExtractor={categoryKeyExtractor}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingRight: 40,
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            />
+          </View>
+        )}
+      </>
+    ),
+    [clothingItems.length, renderCategoryChip, categoryKeyExtractor],
+  );
+
+  const renderEmptyComponent = useCallback(() => <EmptyWardrobe />, []);
 
   return (
     <Container pt={0}>
       <View className="flex-1">
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          {/* Header */}
-          <WardrobeHeader
-            itemCount={clothingItems.length}
-            onAddPress={() => setUploadSheetVisible(true)}
-          />
-
-          {clothingItems.length === 0 ? (
-            /* Empty State */
-            <EmptyWardrobe />
-          ) : (
-            <>
-              {/* Category Chips */}
-              <View className="mb-4">
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  className="px-5"
-                  contentContainerStyle={{ paddingRight: 20 }}>
-                  {CATEGORIES.map(category => (
-                    <CategoryChip
-                      key={category.id}
-                      label={category.label}
-                      icon={category.icon}
-                      isSelected={selectedCategory === category.id}
-                      onPress={() => setSelectedCategory(category.id)}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-
-              {/* Clothing Grid */}
-              <View className="px-5">
-                <View className="flex-row flex-wrap justify-between">
-                  {filteredItems.map(item => (
-                    <View key={item.id} className="w-[48%]">
-                      <ClothingCard
-                        id={item.id}
-                        name={item.name}
-                        category={item.category}
-                        imageUrl={item.imageUrl}
-                        lastWorn={item.lastWorn}
-                        tags={item.tags}
-                        onPress={() => handleClothingPress(item.id)}
-                        onLongPress={() =>
-                          console.log('Long press:', item.id)
-                        }
-                      />
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </>
-          )}
-
-          {/* Bottom Padding for Tab Bar */}
-          <View className="h-24" />
-        </ScrollView>
+        <FlatList
+          data={clothingItems.length === 0 ? [] : filteredItems}
+          renderItem={renderClothingItem}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={renderListHeader}
+          ListEmptyComponent={renderEmptyComponent}
+          numColumns={2}
+          columnWrapperStyle={
+            clothingItems.length > 0 ? { paddingHorizontal: 20 } : undefined
+          }
+          contentContainerStyle={{
+            paddingBottom: 96,
+          }}
+          showsVerticalScrollIndicator={false}
+        />
       </View>
 
       {/* Upload Options Sheet */}

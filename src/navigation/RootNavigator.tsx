@@ -5,6 +5,8 @@ import { RootStackParamList } from './types';
 import BottomTabNavigator from './BottomTabNavigator';
 import AuthNavigator from './AuthNavigator';
 import { useAppSelector } from '../hooks/useRedux';
+import ReviewClothingScreen from '../screens/ReviewClothingScreen';
+import ClothingDetailsScreen from '../screens/ClothingDetailsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -16,11 +18,22 @@ const RootNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-        }}>
+        }}
+      >
         {isAuthenticated ? (
           <Stack.Screen name="AuthStack" component={AuthNavigator} />
         ) : (
-          <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+          <>
+            <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+            <Stack.Screen
+              name="ReviewClothing"
+              component={ReviewClothingScreen}
+            />
+            <Stack.Screen
+              name="ClothingDetails"
+              component={ClothingDetailsScreen}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
