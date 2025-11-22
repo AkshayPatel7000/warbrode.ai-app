@@ -5,20 +5,25 @@ import { MotiView } from 'moti';
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
     const [containerWidth, setContainerWidth] = useState(0);
+    const [containerHeight, setContainerHeight] = useState(0);
     const tabCount = state.routes.length;
     const tabWidth = containerWidth > 0 ? (containerWidth - 16) / tabCount : 0;
+    const circleSize = containerHeight > 0 ? containerHeight - 16 : 48; // Circle size based on container height
 
     return (
         <View
             className="absolute bottom-6 left-5 right-5 flex-row bg-black rounded-full shadow-lg shadow-slate-900/10 px-2 py-2"
-            onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+            onLayout={(e) => {
+                setContainerWidth(e.nativeEvent.layout.width);
+                setContainerHeight(e.nativeEvent.layout.height);
+            }}
         >
-            {/* Animated background indicator */}
+            {/* Animated background indicator - Circle */}
             {containerWidth > 0 && (
                 <MotiView
                     from={{ translateX: 0 }}
                     animate={{
-                        translateX: state.index * tabWidth
+                        translateX: state.index * tabWidth + (tabWidth - circleSize) / 2
                     }}
                     transition={{
                         type: 'spring',
@@ -29,10 +34,10 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                         position: 'absolute',
                         top: 8,
                         left: 8,
-                        width: tabWidth,
-                        bottom: 8,
+                        width: circleSize,
+                        height: circleSize,
                         backgroundColor: '#a3e635',
-                        borderRadius: 9999,
+                        borderRadius: circleSize / 2, // Perfect circle
                     }}
                 />
             )}
@@ -73,7 +78,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                         {options.tabBarIcon?.({
                             focused: isFocused,
                             color: isFocused ? '#0f172a' : '#94a3b8',
-                            size: 24,
+                            size: 22,
                         })}
                     </TouchableOpacity>
                 );
