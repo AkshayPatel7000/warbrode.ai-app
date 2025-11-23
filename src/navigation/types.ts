@@ -10,6 +10,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   Profile: undefined;
   Settings: undefined;
+  EditProfile: undefined;
   ReviewClothing: {
     itemId: string;
     data: {

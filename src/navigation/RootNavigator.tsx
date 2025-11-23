@@ -7,6 +7,8 @@ import AuthNavigator from './AuthNavigator';
 import { useAppSelector } from '../hooks/useRedux';
 import ReviewClothingScreen from '../screens/ReviewClothingScreen';
 import ClothingDetailsScreen from '../screens/ClothingDetailsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -33,6 +35,8 @@ const RootNavigator = () => {
               name="ClothingDetails"
               component={ClothingDetailsScreen}
             />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           </>
         )}
       </Stack.Navigator>
