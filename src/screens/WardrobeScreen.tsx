@@ -185,7 +185,7 @@ const WardrobeScreen = ({ navigation }: any) => {
   const renderEmptyComponent = useCallback(() => <EmptyWardrobe />, []);
 
   return (
-    <Container pt={0}>
+    <Container pt={10}>
       <View className="flex-1">
         <FlatList
           data={clothingItems.length === 0 ? [] : filteredItems}

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView } from 'react-native';
-import { Shirt, Footprints, Upload, Sparkles, History } from 'lucide-react-native';
+import {
+  Shirt,
+  Footprints,
+  Upload,
+  Sparkles,
+  History,
+} from 'lucide-react-native';
 import {
   HomeHeader,
   OutfitCard,
@@ -41,7 +47,7 @@ const HomeScreen = () => {
 
   if (isLoading) {
     return (
-      <Container pt={0}>
+      <Container pt={10}>
         <View className="flex-1">
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <HomeScreenSkeleton />
@@ -52,8 +58,8 @@ const HomeScreen = () => {
   }
 
   return (
-    <Container pt={0}>
-      <View className="flex-1 ">
+    <Container pt={10}>
+      <View className="flex-1">
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           {/* Header Section */}
           <HomeHeader
@@ -136,10 +142,7 @@ const HomeScreen = () => {
         </ScrollView>
       </View>
     </Container>
-
   );
 };
 
 export default HomeScreen;
-
-
