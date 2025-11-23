@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,81 +9,46 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { AuthButton, AuthInput, AuthCard, SocialButton } from '../../components/auth';
-import { AuthStackParamList } from '../../navigation/types';
-
-import LinearGradient from 'react-native-linear-gradient';
-import Container from '../../components/Container';
-
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import { MotiView } from 'moti';
+
+import { AuthButton, AuthInput, SocialButton } from '../../components/auth';
+import { AuthStackParamList } from '../../navigation/types';
+import Container from '../../components/Container';
+import { showSuccessToast, showErrorToast } from '../../utils/toast';
 
 type AuthMode = 'login' | 'signup';
 
+// Validation Schemas
+const loginSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().required('Password is required'),
+});
+
+const signupSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Passwords must match')
+    .required('Confirm Password is required'),
+});
+
 const AuthScreen = () => {
-  // Safe navigation hook - handle case where context might not be available
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
-
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState<AuthMode>('login');
   const [toggleWidth, setToggleWidth] = useState(0);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [loading, setLoading] = useState(false);
 
-  // Memoize mode change to prevent navigation issues
   const handleModeChange = useCallback((newMode: AuthMode) => {
     setMode(newMode);
-    setErrors({}); // Clear errors when switching modes
   }, []);
-
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (mode === 'signup' && !name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
-    }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (mode === 'signup' && password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validate()) return;
-
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      if (!navigation) return;
-      try {
-        // @ts-ignore - Navigate to root stack
-        navigation.getParent()?.replace('MainTabs');
-      } catch (error) {
-        console.error('Navigation error:', error);
-      }
-    }, 1500);
-  };
 
   const handleGoogleSignIn = () => {
     console.log('Google Sign-In');
+    // TODO: Implement Google Sign-In
   };
 
   const handleForgotPassword = () => {
@@ -94,23 +59,46 @@ const AuthScreen = () => {
     }
   };
 
+  const handleAuthSubmit = async (values: any, { setSubmitting }: any) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      if (mode === 'login') {
+        showSuccessToast('Welcome back!', 'Successfully logged in');
+      } else {
+        showSuccessToast('Account Created', 'Welcome to WardrobeAI!');
+      }
+
+      // Navigate to main app
+      if (navigation) {
+        // @ts-ignore - Navigate to root stack
+        navigation.getParent()?.replace('MainTabs');
+      }
+    } catch (error) {
+      showErrorToast(
+        'Authentication Failed',
+        'Please check your credentials and try again',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Container>
-      <SafeAreaView className="flex-1 ">
+      <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
-          keyboardVerticalOffset={0}>
+          keyboardVerticalOffset={0}
+        >
           <ScrollView
             className="flex-1"
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
-
-
-
-
-
+            showsVerticalScrollIndicator={false}
+          >
             {/* Content */}
             <View className="flex-1 px-5">
               <Text className="text-2xl font-bold text-slate-900">
@@ -121,18 +109,20 @@ const AuthScreen = () => {
                   ? 'Sign in to continue to your wardrobe'
                   : 'Sign up to get started with WardrobeAI'}
               </Text>
+
               {/* Auth Card */}
               <View className="mt-4 bg-white rounded-3xl p-5 shadow-lg space-y-4 gap-4">
                 {/* Toggle Pills */}
                 <View
                   className="flex-row bg-slate-100 rounded-full p-1 relative"
-                  onLayout={(e) => setToggleWidth(e.nativeEvent.layout.width)}
+                  onLayout={e => setToggleWidth(e.nativeEvent.layout.width)}
                 >
                   {toggleWidth > 0 && (
                     <MotiView
                       from={{ translateX: 0 }}
                       animate={{
-                        translateX: mode === 'login' ? 0 : (toggleWidth - 8) / 2
+                        translateX:
+                          mode === 'login' ? 0 : (toggleWidth - 8) / 2,
                       }}
                       transition={{ type: 'timing', duration: 250 }}
                       style={{
@@ -153,83 +143,143 @@ const AuthScreen = () => {
                   )}
                   <TouchableOpacity
                     className="flex-1 py-2 rounded-full items-center z-10"
-                    onPress={() => handleModeChange('login')}>
+                    onPress={() => handleModeChange('login')}
+                  >
                     <Text
-                      className={mode === 'login' ? 'text-sm text-slate-900 font-medium' : 'text-sm text-slate-500'}>
+                      className={
+                        mode === 'login'
+                          ? 'text-sm text-slate-900 font-medium'
+                          : 'text-sm text-slate-500'
+                      }
+                    >
                       Login
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     className="flex-1 py-2 rounded-full items-center z-10"
-                    onPress={() => handleModeChange('signup')}>
+                    onPress={() => handleModeChange('signup')}
+                  >
                     <Text
-                      className={mode === 'signup' ? 'text-sm text-slate-900 font-medium' : 'text-sm text-slate-500'}>
+                      className={
+                        mode === 'signup'
+                          ? 'text-sm text-slate-900 font-medium'
+                          : 'text-sm text-slate-500'
+                      }
+                    >
                       Sign Up
                     </Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* Form Fields */}
-                <View className="space-y-3 gap-4">
-                  {mode === 'signup' && (
-                    <AuthInput
-                      label="Name"
-                      placeholder="John Doe"
-                      value={name}
-                      onChangeText={setName}
-                      error={errors.name}
-                    />
+                {/* Formik Form */}
+                <Formik
+                  initialValues={{
+                    name: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: '',
+                  }}
+                  validationSchema={
+                    mode === 'login' ? loginSchema : signupSchema
+                  }
+                  onSubmit={handleAuthSubmit}
+                  key={mode} // Reset form when mode changes
+                >
+                  {({
+                    handleChange,
+                    handleBlur,
+                    handleSubmit,
+                    values,
+                    errors,
+                    touched,
+                    isSubmitting,
+                  }) => (
+                    <>
+                      {/* Form Fields */}
+                      <View className="space-y-3 gap-4">
+                        {mode === 'signup' && (
+                          <AuthInput
+                            label="Name"
+                            placeholder="John Doe"
+                            value={values.name}
+                            onChangeText={handleChange('name')}
+                            onBlur={handleBlur('name')}
+                            error={
+                              touched.name && errors.name
+                                ? errors.name
+                                : undefined
+                            }
+                          />
+                        )}
+
+                        <AuthInput
+                          label="Email"
+                          placeholder="you@example.com"
+                          value={values.email}
+                          onChangeText={handleChange('email')}
+                          onBlur={handleBlur('email')}
+                          keyboardType="email-address"
+                          error={
+                            touched.email && errors.email
+                              ? errors.email
+                              : undefined
+                          }
+                        />
+
+                        <AuthInput
+                          label="Password"
+                          placeholder="••••••••"
+                          value={values.password}
+                          onChangeText={handleChange('password')}
+                          onBlur={handleBlur('password')}
+                          secure
+                          error={
+                            touched.password && errors.password
+                              ? errors.password
+                              : undefined
+                          }
+                        />
+
+                        {mode === 'signup' && (
+                          <AuthInput
+                            label="Confirm Password"
+                            placeholder="••••••••"
+                            value={values.confirmPassword}
+                            onChangeText={handleChange('confirmPassword')}
+                            onBlur={handleBlur('confirmPassword')}
+                            secure
+                            error={
+                              touched.confirmPassword && errors.confirmPassword
+                                ? errors.confirmPassword
+                                : undefined
+                            }
+                          />
+                        )}
+
+                        {mode === 'login' && (
+                          <TouchableOpacity
+                            onPress={handleForgotPassword}
+                            className="self-end"
+                          >
+                            <Text className="text-xs text-slate-500">
+                              Forgot password?
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+
+                      {/* Submit Button */}
+                      <View className="mt-2">
+                        <AuthButton
+                          variant="primary"
+                          label={mode === 'login' ? 'Login' : 'Sign Up'}
+                          onPress={() => handleSubmit()}
+                          loading={isSubmitting}
+                        />
+                      </View>
+                    </>
                   )}
-
-                  <AuthInput
-                    label="Email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    error={errors.email}
-                  />
-
-                  <AuthInput
-                    label="Password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChangeText={setPassword}
-                    secure
-                    error={errors.password}
-                  />
-
-                  {mode === 'signup' && (
-                    <AuthInput
-                      label="Confirm Password"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
-                      secure
-                      error={errors.confirmPassword}
-                    />
-                  )}
-
-                  {mode === 'login' && (
-                    <TouchableOpacity
-                      onPress={handleForgotPassword}
-                      className="self-end">
-                      <Text className="text-xs text-slate-500">
-                        Forgot password?
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Submit Button */}
-                <View className="mt-2">
-                  <AuthButton
-                    variant="primary"
-                    label={mode === 'login' ? 'Login' : 'Sign Up'}
-                    onPress={handleSubmit}
-                    loading={loading}
-                  />
-                </View>
+                </Formik>
 
                 {/* Divider */}
                 <View className="flex-row items-center my-3">
@@ -250,9 +300,11 @@ const AuthScreen = () => {
 
               {/* Bottom Link */}
               <TouchableOpacity
-                onPress={() => handleModeChange(mode === 'login' ? 'signup' : 'login')}
-                className="mt-3 items-center pb-6 ">
-
+                onPress={() =>
+                  handleModeChange(mode === 'login' ? 'signup' : 'login')
+                }
+                className="mt-3 items-center pb-6 "
+              >
                 <Text className="text-xs text-slate-500">
                   {mode === 'login'
                     ? "Don't have an account? "
@@ -266,9 +318,7 @@ const AuthScreen = () => {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-
     </Container>
-
   );
 };
 

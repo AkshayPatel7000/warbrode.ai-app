@@ -14,6 +14,7 @@ interface AuthInputProps {
   placeholder?: string;
   value: string;
   onChangeText: (text: string) => void;
+  onBlur?: (e: any) => void;
   keyboardType?: KeyboardTypeOptions;
   error?: string;
   secure?: boolean;
@@ -25,23 +26,29 @@ const AuthInput: React.FC<AuthInputProps> = ({
   placeholder,
   value,
   onChangeText,
+  onBlur,
   keyboardType = 'default',
   error,
   secure = false,
-  className = "w-full",
+  className = 'w-full',
 }) => {
   const [isSecureVisible, setIsSecureVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <View className={clsx('w-full', className)}>
-      {label && <Text className="mb-1 text-xs font-medium text-slate-600">{label}</Text>}
+      {label && (
+        <Text className="mb-1 text-xs font-medium text-slate-600">{label}</Text>
+      )}
       <View
         className={clsx(
           'flex-row items-center px-3 py-2 rounded-2xl bg-white border shadow-sm',
-          isFocused ? 'border-lime-400 shadow-lime-600' : 'border-slate-200 shadow-slate-200/50',
-          error ? 'border-red-500' : "flex-row"
-        )}>
+          isFocused
+            ? 'border-lime-400 shadow-lime-600'
+            : 'border-slate-200 shadow-slate-200/50',
+          error ? 'border-red-500' : 'flex-row',
+        )}
+      >
         <TextInput
           className="flex-1 text-sm text-slate-900 py-1"
           placeholder={placeholder}
@@ -52,12 +59,16 @@ const AuthInput: React.FC<AuthInputProps> = ({
           secureTextEntry={secure && !isSecureVisible}
           autoCapitalize="none"
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onBlur={e => {
+            setIsFocused(false);
+            onBlur?.(e);
+          }}
         />
         {secure && (
           <TouchableOpacity
             onPress={() => setIsSecureVisible(!isSecureVisible)}
-            className="p-1">
+            className="p-1"
+          >
             {isSecureVisible ? (
               <EyeOff size={20} color="#64748b" />
             ) : (
