@@ -28,7 +28,7 @@ export type RootStackParamList = {
 
 export type BottomTabParamList = {
   Home: undefined;
-  Explore: undefined;
+  OutfitGenerator: undefined;
   Create: undefined;
   Wardrobe: undefined;
   Profile: undefined;

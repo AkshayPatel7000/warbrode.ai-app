@@ -1,11 +1,11 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Plus, Search, ShoppingBag, User } from 'lucide-react-native';
+import { Home, Plus, Sparkles, ShoppingBag, User } from 'lucide-react-native';
 import React from 'react';
 import CustomTabBar from '../components/CustomTabBar';
 import { BottomTabParamList } from './types';
 
 // Import screens
-import ExploreScreen from '../screens/ExploreScreen';
+import OutfitGeneratorScreen from '../screens/OutfitGeneratorScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import WardrobeScreen from '../screens/WardrobeScreen';
@@ -21,10 +21,12 @@ const BottomTabNavigator = () => {
       tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen
-        name="Explore"
-        component={ExploreScreen}
+        name="OutfitGenerator"
+        component={OutfitGeneratorScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Search color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Sparkles color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
