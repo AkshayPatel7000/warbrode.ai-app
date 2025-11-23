@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   Image,
 } from 'react-native';
 import {
@@ -18,6 +17,7 @@ import {
   Check,
 } from 'lucide-react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../hooks/useRedux';
 import { Formik } from 'formik';
@@ -75,14 +75,19 @@ const EditProfileScreen = () => {
       // TODO: Dispatch update user action with avatar
       // await dispatch(updateUser({ ...values, avatar: avatarUri }));
 
-      Alert.alert('Success', 'Profile updated successfully', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Profile updated successfully',
+        visibilityTime: 2000,
+        onHide: () => navigation.goBack(),
+      });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update profile',
+      });
     }
   };
 
@@ -100,16 +105,30 @@ const EditProfileScreen = () => {
       }
 
       if (result.errorCode) {
-        Alert.alert('Error', result.errorMessage || 'Failed to open camera');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: result.errorMessage || 'Failed to open camera',
+        });
         return;
       }
 
       if (result.assets && result.assets[0]) {
         setAvatarUri(result.assets[0].uri);
+        Toast.show({
+          type: 'success',
+          text1: 'Photo Updated',
+          text2: 'Your profile photo has been updated',
+          visibilityTime: 2000,
+        });
       }
     } catch (error) {
       console.error('Camera error:', error);
-      Alert.alert('Error', 'Failed to access camera');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to access camera',
+      });
     }
   };
 
@@ -127,16 +146,30 @@ const EditProfileScreen = () => {
       }
 
       if (result.errorCode) {
-        Alert.alert('Error', result.errorMessage || 'Failed to open gallery');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: result.errorMessage || 'Failed to open gallery',
+        });
         return;
       }
 
       if (result.assets && result.assets[0]) {
         setAvatarUri(result.assets[0].uri);
+        Toast.show({
+          type: 'success',
+          text1: 'Photo Updated',
+          text2: 'Your profile photo has been updated',
+          visibilityTime: 2000,
+        });
       }
     } catch (error) {
       console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to access gallery');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to access gallery',
+      });
     }
   };
 
