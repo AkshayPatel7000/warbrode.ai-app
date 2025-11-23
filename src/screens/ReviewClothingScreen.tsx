@@ -12,6 +12,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Toast from 'react-native-toast-message';
 import Container from '../components/Container';
+import ScreenHeader from '../components/common/ScreenHeader';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import {
@@ -133,7 +134,7 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
 
   return (
     <Container pt={10}>
-      <View className="flex-1 pt-12">
+      <View className="flex-1 ">
         <Formik
           initialValues={initialValues}
           validationSchema={clothingValidationSchema}
@@ -156,26 +157,25 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
                 showsVerticalScrollIndicator={false}
               >
                 {/* Header */}
-                <View className="flex-row items-center justify-between px-5 pt-2 pb-4">
-                  <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm shadow-slate-200/50"
-                    activeOpacity={0.7}
-                  >
-                    <X size={20} color="#0f172a" />
-                  </TouchableOpacity>
-                  <Text className="text-base font-semibold text-slate-900">
-                    Review & Edit
-                  </Text>
-                  <TouchableOpacity
-                    onPress={handleDelete}
-                    className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm shadow-slate-200/50"
-                    activeOpacity={0.7}
-                    disabled={isDeleting}
-                  >
-                    <Trash2 size={18} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
+                <ScreenHeader
+                  title="Review & Edit"
+                  variant="center"
+                  onBackPress={() => navigation.goBack()}
+                  BackIcon={X}
+                  titleSize="lg"
+                  paddingTop={44}
+                  paddingBottom={24}
+                  customAction={
+                    <TouchableOpacity
+                      onPress={handleDelete}
+                      className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm shadow-slate-200/50"
+                      activeOpacity={0.7}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 size={18} color="#ef4444" />
+                    </TouchableOpacity>
+                  }
+                />
 
                 {/* Image Preview */}
                 <View className="mx-5 mb-6">

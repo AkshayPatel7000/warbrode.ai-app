@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { MoreVertical } from 'lucide-react-native';
+import ScreenHeader from '../components/common/ScreenHeader';
 import {
-  TopBar,
   HeroImageCard,
   ItemSummary,
   AttributeList,
@@ -10,9 +11,9 @@ import {
   ActionButtonRow,
 } from '../components/clothing';
 import Container from '../components/Container';
-import { WardrobeStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
 
-type Props = NativeStackScreenProps<WardrobeStackParamList, 'ClothingDetails'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'ClothingDetails'>;
 
 const ClothingDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { itemId } = route.params;
@@ -47,7 +48,7 @@ const ClothingDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
         { text: 'Duplicate', onPress: () => console.log('Duplicate') },
         { text: 'Cancel', style: 'cancel' },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -78,7 +79,7 @@ const ClothingDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -87,10 +88,15 @@ const ClothingDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
       <View className="flex-1 pb-10">
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           {/* Top Bar */}
-          <TopBar
-            // title="Item details"
+          <ScreenHeader
+            title="Item Details"
+            variant="center"
             onBackPress={handleBack}
-            onMorePress={handleMore}
+            ActionIcon={MoreVertical}
+            onActionPress={handleMore}
+            titleSize="lg"
+            paddingTop={44}
+            paddingBottom={24}
           />
 
           {/* Hero Image */}

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import Container from '../components/Container';
+import ScreenHeader from '../components/common/ScreenHeader';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -62,7 +63,7 @@ const SettingsScreen = () => {
   };
 
   return (
-    <Container pt={60}>
+    <Container pt={10}>
       <View className="flex-1">
         <ScrollView
           className="flex-1"
@@ -70,12 +71,15 @@ const SettingsScreen = () => {
           contentContainerStyle={{ paddingBottom: 100 }}
         >
           {/* Header */}
-          <View className="px-6 pt-8 pb-6">
-            <Text className="text-3xl font-bold text-slate-900">Settings</Text>
-            <Text className="text-sm text-slate-500 mt-1">
-              Customize your outfit experience
-            </Text>
-          </View>
+
+          <ScreenHeader
+            title="Settings"
+            variant="center"
+            onBackPress={() => navigation.goBack()}
+            titleSize="lg"
+            paddingTop={44}
+            paddingBottom={24}
+          />
 
           {/* Style Preferences Section */}
           <View className="px-6 mb-6">

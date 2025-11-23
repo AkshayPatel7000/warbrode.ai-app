@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Heart, RefreshCw, Sparkles, ThumbsDown } from 'lucide-react-native';
 import Container from '../components/Container';
+import ScreenHeader from '../components/common/ScreenHeader';
 
 // Mock data for demonstration
 const MOCK_OUTFIT = {
@@ -77,14 +78,12 @@ const OutfitGeneratorScreen = () => {
       <View className="flex-1 ">
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           {/* Header */}
-          <View className="px-6 pt-16 pb-6">
-            <Text className="text-3xl font-bold text-slate-900">
-              Outfit Generator
-            </Text>
-            <Text className="text-sm text-slate-500 mt-1">
-              Based on your wardrobe and today's weather
-            </Text>
-          </View>
+          <ScreenHeader
+            title="Outfit Generator"
+            subtitle="Based on your wardrobe and today's weather"
+            paddingTop={64}
+            paddingBottom={24}
+          />
 
           {/* Outfit Preview Card */}
           <View className="mx-6 mb-4">

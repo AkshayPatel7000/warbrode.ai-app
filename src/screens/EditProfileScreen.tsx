@@ -24,6 +24,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Container from '../components/Container';
 import UploadOptionsSheet from '../components/upload/UploadOptionsSheet';
+import ScreenHeader from '../components/common/ScreenHeader';
 
 // Validation Schema
 const profileValidationSchema = Yup.object().shape({
@@ -178,7 +179,7 @@ const EditProfileScreen = () => {
   };
 
   return (
-    <Container pt={60}>
+    <Container pt={10}>
       <View className="flex-1">
         <Formik
           initialValues={initialValues}
@@ -199,26 +200,24 @@ const EditProfileScreen = () => {
           }) => (
             <>
               {/* Header */}
-              <View className="flex-row items-center justify-between px-6 pt-8 pb-6">
-                <TouchableOpacity
-                  onPress={() => navigation.goBack()}
-                  className="w-10 h-10 items-center justify-center rounded-full bg-white shadow-sm"
-                  activeOpacity={0.7}
-                >
-                  <ArrowLeft size={20} color="#0f172a" />
-                </TouchableOpacity>
-                <Text className="text-2xl font-bold text-slate-900">
-                  Edit Profile
-                </Text>
-                <TouchableOpacity
-                  onPress={() => handleSubmit()}
-                  className="w-10 h-10 items-center justify-center rounded-full bg-lime-400 shadow-lg shadow-lime-400/30"
-                  activeOpacity={0.7}
-                  disabled={isSubmitting}
-                >
-                  <Check size={20} color="#0f172a" />
-                </TouchableOpacity>
-              </View>
+              <ScreenHeader
+                title="Edit Profile"
+                variant="center"
+                onBackPress={() => navigation.goBack()}
+                titleSize="lg"
+                paddingTop={44}
+                paddingBottom={24}
+                customAction={
+                  <TouchableOpacity
+                    onPress={() => handleSubmit()}
+                    className="w-10 h-10 items-center justify-center rounded-full bg-lime-400 shadow-lg shadow-lime-400/30"
+                    activeOpacity={0.7}
+                    disabled={isSubmitting}
+                  >
+                    <Check size={20} color="#0f172a" />
+                  </TouchableOpacity>
+                }
+              />
 
               <ScrollView
                 className="flex-1"

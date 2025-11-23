@@ -25,6 +25,7 @@ import { useAppSelector, useAppDispatch } from '../hooks/useRedux';
 import { logout } from '../store/slices/authSlice';
 import { useNavigation } from '@react-navigation/native';
 import Container from '../components/Container';
+import ScreenHeader from '../components/common/ScreenHeader';
 
 const ProfileScreen = () => {
   const dispatch = useAppDispatch();
@@ -89,7 +90,7 @@ const ProfileScreen = () => {
   };
 
   return (
-    <Container pt={60}>
+    <Container pt={10}>
       <View className="flex-1">
         <ScrollView
           className="flex-1"
@@ -97,12 +98,12 @@ const ProfileScreen = () => {
           contentContainerStyle={{ paddingBottom: 100 }}
         >
           {/* Header */}
-          <View className="px-6 pt-8 pb-6">
-            <Text className="text-3xl font-bold text-slate-900">Profile</Text>
-            <Text className="text-sm text-slate-500 mt-1">
-              Manage your account and preferences
-            </Text>
-          </View>
+          <ScreenHeader
+            title="Profile"
+            subtitle="Manage your account and preferences"
+            paddingTop={64}
+            paddingBottom={24}
+          />
 
           {/* User Identity Card */}
           <View className="mx-6 mb-6">

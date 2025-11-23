@@ -25,6 +25,7 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { CreateStackParamList, RootStackParamList } from '../navigation/types';
 import UploadOptionsSheet from '../components/upload/UploadOptionsSheet';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import ScreenHeader from '../components/common/ScreenHeader';
 
 type Props = CompositeScreenProps<
   NativeStackScreenProps<CreateStackParamList, 'UploadStatus'>,
@@ -337,29 +338,23 @@ const UploadStatusScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <Container pt={10}>
-      <View className="flex-1 pt-12">
+      <View className="flex-1">
         {/* Header */}
-        <View className="flex-row items-center justify-between px-5 pt-2 pb-4">
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-slate-900">
-              Upload Status
-            </Text>
-            <Text className="text-sm text-slate-500 mt-1">
-              {processingCount > 0
-                ? `${processingCount} item${processingCount > 1 ? 's' : ''} processing`
-                : completedCount > 0
-                  ? `${completedCount} item${completedCount > 1 ? 's' : ''} ready to review`
-                  : 'No recent uploads'}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => setUploadSheetVisible(true)}
-            className="w-10 h-10 rounded-full bg-white/50 items-center justify-center"
-          >
-            <Plus size={20} color="#0f172a" />
-          </TouchableOpacity>
-          {/* Add Button */}
-        </View>
+        <ScreenHeader
+          title="Upload Status"
+          subtitle={
+            processingCount > 0
+              ? `${processingCount} item${processingCount > 1 ? 's' : ''} processing`
+              : completedCount > 0
+                ? `${completedCount} item${completedCount > 1 ? 's' : ''} ready to review`
+                : 'No recent uploads'
+          }
+          ActionIcon={Plus}
+          onActionPress={() => setUploadSheetVisible(true)}
+          paddingTop={64}
+          paddingBottom={24}
+          paddingHorizontal={20}
+        />
 
         <FlatList
           data={uploads}
