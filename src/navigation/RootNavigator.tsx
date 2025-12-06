@@ -22,7 +22,7 @@ const RootNavigator = () => {
           headerShown: false,
         }}
       >
-        {isAuthenticated ? (
+        {!isAuthenticated ? (
           <Stack.Screen name="AuthStack" component={AuthNavigator} />
         ) : (
           <>

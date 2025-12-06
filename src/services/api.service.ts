@@ -4,8 +4,22 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import {API_BASE_URL, API_TIMEOUT} from '@env';
-import {store} from '../store';
+import { API_BASE_URL, API_TIMEOUT } from '@env';
+import { store } from '../store';
+import { API_ENDPOINTS } from '../constants/api';
+import type {
+  SignupRequest,
+  SignupResponse,
+  LoginRequest,
+  LoginResponse,
+  DeviceTokenRequest,
+  DeviceTokenResponse,
+  UserPreferences,
+  PreferencesResponse,
+  ClothesListResponse,
+  DeleteClothesResponse,
+  UploadResponse,
+} from '../types/api.types';
 
 class ApiService {
   private axiosInstance: AxiosInstance;
@@ -64,6 +78,7 @@ class ApiService {
     );
   }
 
+  // Generic HTTP methods
   public async get<T>(
     url: string,
     config?: AxiosRequestConfig,
@@ -100,6 +115,68 @@ class ApiService {
     config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete<T>(url, config);
+  }
+
+  // Authentication API methods
+  public async signup(
+    data: SignupRequest,
+  ): Promise<AxiosResponse<SignupResponse>> {
+    return this.post<SignupResponse>(API_ENDPOINTS.AUTH.SIGNUP, data);
+  }
+
+  public async login(
+    data: LoginRequest,
+  ): Promise<AxiosResponse<LoginResponse>> {
+    return this.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, data);
+  }
+
+  public async registerDeviceToken(
+    data: DeviceTokenRequest,
+  ): Promise<AxiosResponse<DeviceTokenResponse>> {
+    return this.post<DeviceTokenResponse>(
+      API_ENDPOINTS.AUTH.DEVICE_TOKEN,
+      data,
+    );
+  }
+
+  public async getPreferences(): Promise<AxiosResponse<PreferencesResponse>> {
+    return this.get<PreferencesResponse>(API_ENDPOINTS.AUTH.PREFERENCES);
+  }
+
+  public async updatePreferences(
+    preferences: Partial<UserPreferences>,
+  ): Promise<AxiosResponse<PreferencesResponse>> {
+    return this.patch<PreferencesResponse>(
+      API_ENDPOINTS.AUTH.PREFERENCES,
+      preferences,
+    );
+  }
+
+  // Clothes API methods
+  public async getClothes(): Promise<AxiosResponse<ClothesListResponse>> {
+    return this.get<ClothesListResponse>(API_ENDPOINTS.CLOTHES.LIST);
+  }
+
+  public async deleteClothes(
+    id: string,
+  ): Promise<AxiosResponse<DeleteClothesResponse>> {
+    return this.delete<DeleteClothesResponse>(API_ENDPOINTS.CLOTHES.DELETE(id));
+  }
+
+  // Upload API method
+  public async uploadClothingImage(
+    file: File | Blob,
+    autoTag: boolean = true,
+  ): Promise<AxiosResponse<UploadResponse>> {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('autoTag', String(autoTag));
+
+    return this.post<UploadResponse>(API_ENDPOINTS.UPLOAD.IMAGE, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -26,26 +25,27 @@ const SplashScreen = () => {
   }, [isAuthenticated, navigation]);
 
   return (
-
     <View style={styles.container}>
       <MotiView
         from={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'timing', duration: 800 }}
-        style={styles.content}>
+        style={styles.content}
+      >
         {/* Logo Circle with Gradient */}
         <LinearGradient
           colors={['#d9f99d', '#a3e635']} // lime-200 to lime-400
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.logoCircle}>
+          style={styles.logoCircle}
+        >
           <Sparkles size={40} color="#ffffff" />
         </LinearGradient>
 
         <Text style={styles.appName}>WardrobeAI</Text>
         <Text style={styles.subtitle}>Your AI-powered fashion assistant</Text>
-      </MotiView></View>
-
+      </MotiView>
+    </View>
   );
 };
 

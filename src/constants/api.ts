@@ -1,18 +1,15 @@
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
+    SIGNUP: '/v1/auth/signup',
+    LOGIN: '/v1/auth/login',
+    DEVICE_TOKEN: '/v1/auth/device-token',
+    PREFERENCES: '/v1/auth/preferences',
   },
-  USER: {
-    PROFILE: '/user/profile',
-    UPDATE: '/user/update',
+  CLOTHES: {
+    LIST: '/v1/clothes',
+    DELETE: (id: string) => `/v1/clothes/${id}`,
   },
-  WARDROBE: {
-    LIST: '/wardrobe',
-    CREATE: '/wardrobe',
-    UPDATE: (id: string) => `/wardrobe/${id}`,
-    DELETE: (id: string) => `/wardrobe/${id}`,
+  UPLOAD: {
+    IMAGE: '/v1/upload',
   },
 };
