@@ -4,24 +4,38 @@ import { Camera, Image as ImageIcon, Sparkles } from 'lucide-react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CreateStackParamList } from '../navigation/types';
+import ApiService from '../services/api.service';
+import { showSuccessToast, showErrorToast } from '../utils/toast';
+import type { ApiErrorExtended } from '../types/error.types';
 
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateMain'>;
 
 const CreateScreen: React.FC<Props> = ({ navigation }) => {
   const uploadImage = async (imageUri: string) => {
     try {
-      // TODO: Upload to backend
-      console.log('Uploading image:', imageUri);
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('image', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'clothing.jpg',
+      } as any);
 
-      // Simulate upload
-      // In real implementation, send to backend here
-      // const response = await uploadToBackend(imageUri);
+      // Upload to backend
+      const response = await ApiService.uploadClothingImage(formData as any);
+      const { uploadId } = response.data;
 
-      // Navigate to status screen
-      navigation.navigate('UploadStatus');
+      showSuccessToast('Success', 'Image uploaded successfully');
+
+      // Navigate to status screen with uploadId
+      navigation.navigate('UploadStatus', { uploadId });
     } catch (error) {
       console.error('Upload error:', error);
-      Alert.alert('Error', 'Failed to upload image');
+      const apiError = error as ApiErrorExtended;
+      showErrorToast(
+        'Upload Failed',
+        apiError.userMessage || 'Failed to upload image',
+      );
     }
   };
 
@@ -43,7 +57,7 @@ const CreateScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      if (result.assets && result.assets[0]) {
+      if (result.assets && result.assets[0] && result.assets[0].uri) {
         const imageUri = result.assets[0].uri;
         await uploadImage(imageUri);
       }
@@ -71,7 +85,7 @@ const CreateScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      if (result.assets && result.assets[0]) {
+      if (result.assets && result.assets[0] && result.assets[0].uri) {
         const imageUri = result.assets[0].uri;
         await uploadImage(imageUri);
       }

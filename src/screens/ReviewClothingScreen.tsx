@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { X, Check, Trash2 } from 'lucide-react-native';
 import { Formik } from 'formik';
@@ -20,60 +21,120 @@ import {
   showErrorToast,
   showWarningToast,
 } from '../utils/toast';
+import apiService from '../services/api.service';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReviewClothing'>;
 
-const CLOTHING_TYPES = [
-  'Shirt',
-  'T-Shirt',
-  'Jeans',
-  'Jacket',
-  'Dress',
-  'Shoes',
-  'Accessories',
-];
-const PATTERNS = ['Solid', 'Striped', 'Checked', 'Floral', 'Printed'];
-const STYLE_TAGS = [
-  'Casual',
-  'Formal',
-  'Summer',
-  'Winter',
-  'Office',
-  'Party',
-  'Sport',
-  'Street',
-];
-
-// Validation Schema
-const clothingValidationSchema = Yup.object().shape({
-  itemName: Yup.string()
-    .min(2, 'Item name must be at least 2 characters')
-    .max(50, 'Item name must be less than 50 characters')
-    .required('Item name is required'),
-  selectedType: Yup.string()
-    .oneOf(CLOTHING_TYPES, 'Please select a valid clothing type')
-    .required('Clothing type is required'),
-  selectedPattern: Yup.string()
-    .oneOf(PATTERNS, 'Please select a valid pattern')
-    .required('Pattern is required'),
-  selectedColor: Yup.string().required('Color is required'),
-  selectedTags: Yup.array()
-    .of(Yup.string())
-    .min(1, 'Please select at least one style tag')
-    .required('Style tags are required'),
-});
-
 const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
   const { itemId, data, imageUri } = route.params;
+  const gender = data.gender;
+  console.log('🚀 ~ ReviewClothingScreen ~ route.params:', gender);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [clothingTypes, setClothingTypes] = useState<string[]>([]);
+  const [patterns, setPatterns] = useState<string[]>([]);
+  const [styleTags, setStyleTags] = useState<string[]>([]);
+  const [isLoadingAttributes, setIsLoadingAttributes] = useState(true);
+
+  // Fetch clothing attributes from backend
+  useEffect(() => {
+    const fetchAttributes = async () => {
+      try {
+        setIsLoadingAttributes(true);
+        const response = await apiService.getClothingAttributes(gender);
+        console.log('🚀 ~ fetchAttributes ~ response:', response);
+
+        const backendTypes = response.data.data.types || [];
+        const backendPatterns = response.data.data.patterns || [];
+        const backendTags = response.data.data.tags || [];
+
+        // Merge backend data with params data to ensure params values are included
+        // This handles cases where the AI detected a type/pattern/tag not in backend
+        const mergedTypes = Array.from(
+          new Set([...backendTypes, data.type]),
+        ).filter(Boolean);
+
+        const mergedPatterns = Array.from(
+          new Set([...backendPatterns, data.pattern]),
+        ).filter(Boolean);
+
+        const mergedTags = Array.from(
+          new Set([...backendTags, ...data.tags]),
+        ).filter(Boolean);
+
+        setClothingTypes(mergedTypes);
+        setPatterns(mergedPatterns);
+        setStyleTags(mergedTags);
+
+        console.log('✅ Fetched attributes:', {
+          types: mergedTypes,
+          patterns: mergedPatterns,
+          tags: mergedTags,
+        });
+      } catch (error: any) {
+        console.error('❌ Error fetching attributes:', error);
+        showErrorToast(
+          'Error',
+          error.userMessage || 'Failed to load clothing options',
+        );
+
+        // Fallback: use params data + default values
+        const fallbackTypes = Array.from(
+          new Set([
+            data.type,
+            'Shirt',
+            'T-Shirt',
+            'Jeans',
+            'Jacket',
+            'Dress',
+            'Shoes',
+            'Accessories',
+          ]),
+        ).filter(Boolean);
+
+        const fallbackPatterns = Array.from(
+          new Set([
+            data.pattern,
+            'Solid',
+            'Striped',
+            'Checked',
+            'Floral',
+            'Printed',
+          ]),
+        ).filter(Boolean);
+
+        const fallbackTags = Array.from(
+          new Set([
+            ...data.tags,
+            'Casual',
+            'Formal',
+            'Summer',
+            'Winter',
+            'Office',
+            'Party',
+            'Sport',
+            'Street',
+          ]),
+        ).filter(Boolean);
+
+        setClothingTypes(fallbackTypes);
+        setPatterns(fallbackPatterns);
+        setStyleTags(fallbackTags);
+      } finally {
+        setIsLoadingAttributes(false);
+      }
+    };
+
+    fetchAttributes();
+  }, [gender, data.type, data.pattern, data.tags]);
 
   const initialValues = {
-    itemName: data.name,
+    itemName: data.type,
     selectedType: data.type,
     selectedPattern: data.pattern,
-    selectedColor: data.color,
+    selectedColor: data.colorHex,
     selectedTags: data.tags,
+    gender: gender,
   };
 
   const handleSave = async (values: typeof initialValues) => {
@@ -107,6 +168,31 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   };
 
+  // Dynamic validation schema based on fetched attributes
+  const clothingValidationSchema = Yup.object().shape({
+    itemName: Yup.string()
+      .min(2, 'Item name must be at least 2 characters')
+      .max(50, 'Item name must be less than 50 characters')
+      .required('Item name is required'),
+    selectedType: Yup.string()
+      .oneOf(
+        clothingTypes.length > 0 ? clothingTypes : [''],
+        'Please select a valid clothing type',
+      )
+      .required('Clothing type is required'),
+    selectedPattern: Yup.string()
+      .oneOf(
+        patterns.length > 0 ? patterns : [''],
+        'Please select a valid pattern',
+      )
+      .required('Pattern is required'),
+    selectedColor: Yup.string().required('Color is required'),
+    selectedTags: Yup.array()
+      .of(Yup.string())
+      .min(1, 'Please select at least one style tag')
+      .required('Style tags are required'),
+  });
+
   const handleDelete = () => {
     showWarningToast(
       'Delete Item',
@@ -131,6 +217,18 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
       }, 500);
     }, 500);
   };
+
+  // Show loading state while fetching attributes
+  if (isLoadingAttributes) {
+    return (
+      <Container pt={10}>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#a3e635" />
+          <Text className="text-slate-600 mt-4">Loading options...</Text>
+        </View>
+      </Container>
+    );
+  }
 
   return (
     <Container pt={10}>
@@ -228,7 +326,7 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ paddingRight: 20 }}
                   >
-                    {CLOTHING_TYPES.map(type => (
+                    {clothingTypes.map((type: string) => (
                       <TouchableOpacity
                         key={type}
                         onPress={() => {
@@ -267,7 +365,7 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
                     Pattern *
                   </Text>
                   <View className="flex-row flex-wrap">
-                    {PATTERNS.map(pattern => (
+                    {patterns.map((pattern: string) => (
                       <TouchableOpacity
                         key={pattern}
                         onPress={() => {
@@ -322,7 +420,7 @@ const ReviewClothingScreen: React.FC<Props> = ({ route, navigation }) => {
                     Style Tags *
                   </Text>
                   <View className="flex-row flex-wrap">
-                    {STYLE_TAGS.map(tag => (
+                    {styleTags.map((tag: string) => (
                       <TouchableOpacity
                         key={tag}
                         onPress={() => {

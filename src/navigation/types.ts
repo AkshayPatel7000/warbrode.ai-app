@@ -14,11 +14,11 @@ export type RootStackParamList = {
   ReviewClothing: {
     itemId: string;
     data: {
-      name: string;
       type: string;
-      color: string;
+      colorHex: string;
       pattern: string;
       tags: string[];
+      gender: string | null;
     };
     imageUri: string;
   };
@@ -41,5 +41,7 @@ export type WardrobeStackParamList = {
 
 export type CreateStackParamList = {
   CreateMain: undefined;
-  UploadStatus: undefined;
+  UploadStatus: {
+    uploadId?: string;
+  };
 };

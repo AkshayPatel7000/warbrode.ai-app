@@ -45,29 +45,72 @@ const HomeScreen = () => {
   const user = useSelector((state: RootState) => state.user.currentUser);
 
   /**
-   * Load dashboard data from API
+   * Get current location
    */
-  const loadDashboard = useCallback(async (showLoader = true) => {
-    try {
-      if (showLoader) {
-        setIsLoading(true);
+  const getCurrentLocation = useCallback((): Promise<{
+    lat: number;
+    lon: number;
+  } | null> => {
+    return new Promise(resolve => {
+      // Check if location permission is granted
+      if (locationPermissionStatus !== RESULTS.GRANTED) {
+        console.log('Location permission not granted, skipping location fetch');
+        resolve(null);
+        return;
       }
 
-      const response = await ApiService.getDashboard();
-      setDashboardData(response.data);
-    } catch (error) {
-      const apiError = error as ApiErrorExtended;
-      console.error('Failed to load dashboard:', apiError);
-
-      showErrorToast(
-        'Failed to Load Dashboard',
-        apiError.userMessage || 'Please try again later',
+      Geolocation.getCurrentPosition(
+        position => {
+          const { latitude, longitude } = position.coords;
+          console.log('📍 Current location:', latitude, longitude);
+          resolve({ lat: latitude, lon: longitude });
+        },
+        error => {
+          console.error('Error getting location:', error);
+          resolve(null);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000, // 5 minutes cache
+        },
       );
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
+    });
+  }, [locationPermissionStatus]);
+
+  /**
+   * Load dashboard data from API
+   */
+  const loadDashboard = useCallback(
+    async (showLoader = true) => {
+      try {
+        if (showLoader) {
+          setIsLoading(true);
+        }
+
+        // Get current location if permission is granted
+        const location = await getCurrentLocation();
+
+        // Call API with location params if available
+        const response = await ApiService.getDashboard(
+          location ? { lat: location.lat, lon: location.lon } : undefined,
+        );
+        setDashboardData(response.data);
+      } catch (error) {
+        const apiError = error as ApiErrorExtended;
+        console.error('Failed to load dashboard:', apiError);
+
+        showErrorToast(
+          'Failed to Load Dashboard',
+          apiError.userMessage || 'Please try again later',
+        );
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [getCurrentLocation],
+  );
 
   /**
    * Check location permission status

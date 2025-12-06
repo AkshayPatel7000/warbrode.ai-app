@@ -26,6 +26,9 @@ import { CreateStackParamList, RootStackParamList } from '../navigation/types';
 import UploadOptionsSheet from '../components/upload/UploadOptionsSheet';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ScreenHeader from '../components/common/ScreenHeader';
+import ApiService from '../services/api.service';
+import { showSuccessToast, showErrorToast } from '../utils/toast';
+import type { ApiErrorExtended } from '../types/error.types';
 
 type Props = CompositeScreenProps<
   NativeStackScreenProps<CreateStackParamList, 'UploadStatus'>,
@@ -35,61 +38,176 @@ type Props = CompositeScreenProps<
 interface UploadItem {
   id: string;
   imageUri: string;
-  status: 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   uploadedAt: Date;
   processedData?: {
-    name: string;
     type: string;
-    color: string;
+    colorHex: string;
     pattern: string;
     tags: string[];
+    gender: string | null;
   };
   error?: string;
 }
 
-// Mock data - replace with actual data from Redux/API
-const MOCK_UPLOADS: UploadItem[] = [
-  {
-    id: '1',
-    imageUri: '',
-    status: 'processing',
-    uploadedAt: new Date(Date.now() - 30000),
-  },
-  {
-    id: '2',
-    imageUri: '',
-    status: 'completed',
-    uploadedAt: new Date(Date.now() - 120000),
-    processedData: {
-      name: 'Blue Denim Jacket',
-      type: 'Jacket',
-      color: '#4169E1',
-      pattern: 'Solid',
-      tags: ['Casual', 'Winter'],
-    },
-  },
-  {
-    id: '3',
-    imageUri: '',
-    status: 'failed',
-    uploadedAt: new Date(Date.now() - 180000),
-    error: 'Could not detect clothing item',
-  },
-];
-
-const UploadStatusScreen: React.FC<Props> = ({ navigation }) => {
-  const [uploads, setUploads] = useState<UploadItem[]>(MOCK_UPLOADS);
+const UploadStatusScreen: React.FC<Props> = ({ navigation, route }) => {
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [uploadSheetVisible, setUploadSheetVisible] = useState(false);
   const [confirmImageVisible, setConfirmImageVisible] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pollingIntervals, setPollingIntervals] = useState<
+    Map<string, NodeJS.Timeout>
+  >(new Map());
+
+  // Get uploadId from route params if navigated from CreateScreen
+  const newUploadId = route.params?.uploadId;
+
+  /**
+   * Load upload history from API
+   */
+  const loadUploadHistory = useCallback(async () => {
+    try {
+      const response = await ApiService.getUploadHistory({
+        page: 1,
+        limit: 50,
+        status: 'all',
+        sort: 'newest',
+      });
+
+      const uploadItems: UploadItem[] = response.data.uploads.map(upload => ({
+        id: upload.id,
+        imageUri: 'https://ql0rfdpp-4000.inc1.devtunnels.ms/' + upload.imageUrl,
+        status: upload.status,
+        uploadedAt: new Date(upload.uploadedAt),
+        processedData: upload.processedData,
+        error: undefined,
+      }));
+      console.log('🚀 ~ UploadStatusScreen ~ uploadItems:', uploadItems);
+
+      setUploads(uploadItems);
+
+      // Start polling for processing items
+      uploadItems.forEach(item => {
+        if (item.status === 'pending' || item.status === 'processing') {
+          startPolling(item.id);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to load upload history:', error);
+      showErrorToast('Error', 'Failed to load upload history');
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  /**
+   * Start polling for a specific upload
+   */
+  const startPolling = useCallback(
+    (uploadId: string) => {
+      // Don't start if already polling
+      if (pollingIntervals.has(uploadId)) return;
+
+      let attempts = 0;
+      const maxAttempts = 30; // 60 seconds max (30 * 2s)
+
+      const interval = setInterval(async () => {
+        attempts++;
+
+        if (attempts > maxAttempts) {
+          clearInterval(interval);
+          setPollingIntervals(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(uploadId);
+            return newMap;
+          });
+          return;
+        }
+
+        try {
+          const response = await ApiService.getUploadStatus(uploadId);
+          const { status, processedData, error } = response.data.data;
+
+          console.log(`📊 Polling ${uploadId} - Status: ${status}`);
+          console.log(`📊 ProcessedData:`, processedData);
+
+          // Update upload in state
+          setUploads(prev =>
+            prev.map(upload =>
+              upload.id === uploadId
+                ? {
+                    ...upload,
+                    status,
+                    processedData: processedData || undefined,
+                    error: error || undefined,
+                  }
+                : upload,
+            ),
+          );
+
+          // Stop polling if completed or failed
+          if (status === 'completed' || status === 'failed') {
+            clearInterval(interval);
+            setPollingIntervals(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(uploadId);
+              return newMap;
+            });
+          }
+        } catch (error) {
+          console.error(`Failed to poll status for ${uploadId}:`, error);
+        }
+      }, 2000); // Poll every 2 seconds
+
+      setPollingIntervals(prev => new Map(prev).set(uploadId, interval));
+    },
+    [pollingIntervals],
+  );
+
+  /**
+   * Stop all polling intervals
+   */
+  const stopAllPolling = useCallback(() => {
+    pollingIntervals.forEach(interval => clearInterval(interval));
+    setPollingIntervals(new Map());
+  }, [pollingIntervals]);
+
+  /**
+   * Initial load and cleanup
+   */
+  useEffect(() => {
+    loadUploadHistory();
+
+    return () => {
+      stopAllPolling();
+    };
+  }, []);
+
+  /**
+   * Handle new upload from route params
+   */
+  useEffect(() => {
+    if (newUploadId) {
+      // Add new upload to the list
+      const newUpload: UploadItem = {
+        id: newUploadId,
+        imageUri: '',
+        status: 'pending',
+        uploadedAt: new Date(),
+      };
+
+      setUploads(prev => [newUpload, ...prev]);
+      startPolling(newUploadId);
+    }
+  }, [newUploadId]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    // TODO: Fetch latest upload statuses from backend
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    stopAllPolling();
+    loadUploadHistory();
   };
 
   const handleTakePhoto = async () => {
@@ -150,21 +268,83 @@ const UploadStatusScreen: React.FC<Props> = ({ navigation }) => {
     if (!selectedImageUri) return;
 
     try {
-      // TODO: Upload to backend
-      console.log('Uploading image:', selectedImageUri);
+      console.log('🔌 Testing backend connectivity...');
+
+      // Test connectivity first
+      try {
+        await ApiService.getUploadHistory({ page: 1, limit: 1 });
+        console.log('✅ Backend is reachable');
+      } catch (connectError) {
+        console.error('❌ Backend connectivity test failed:', connectError);
+        throw new Error(
+          'Cannot reach backend server. Please check your connection.',
+        );
+      }
+
+      console.log('📤 Uploading image with blob util:', selectedImageUri);
+
+      // Use blob-based upload (more reliable for React Native)
+      let uploadId: string;
+      try {
+        const response = await ApiService.uploadClothingImageWithBlob(
+          selectedImageUri,
+          'clothing.jpg',
+        );
+        console.log('🚀 Blob upload response:', response);
+        uploadId = response.uploadId;
+      } catch (blobError) {
+        console.warn(
+          '⚠️ Blob upload failed, trying FormData method:',
+          blobError,
+        );
+
+        // Fallback to FormData method
+        const formData = new FormData();
+        formData.append('image', {
+          uri: selectedImageUri,
+          type: 'image/jpeg',
+          name: 'clothing.jpg',
+        } as any);
+
+        const axiosResponse = await ApiService.uploadClothingImage(formData);
+        console.log('🚀 FormData upload response:', axiosResponse);
+        uploadId = axiosResponse.data.uploadId;
+      }
 
       // Close confirmation modal
       setConfirmImageVisible(false);
       setSelectedImageUri(null);
 
-      // Show success message
-      Alert.alert('Success', 'Image uploaded successfully');
+      // Add to uploads list
+      const newUpload: UploadItem = {
+        id: uploadId,
+        imageUri: selectedImageUri,
+        status: 'pending',
+        uploadedAt: new Date(),
+      };
 
-      // Refresh the list
-      onRefresh();
+      setUploads(prev => [newUpload, ...prev]);
+
+      // Start polling for this upload
+      startPolling(uploadId);
+
+      // Show success message
+      showSuccessToast('Success', 'Image uploaded successfully');
     } catch (error) {
       console.error('Upload error:', error);
-      Alert.alert('Error', 'Failed to upload image');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      const apiError = error as ApiErrorExtended;
+      console.error('API Error message:', apiError.userMessage);
+      console.error('API Error status:', apiError.statusCode);
+
+      // Show more specific error message
+      let errorMessage = apiError.userMessage || 'Failed to upload image';
+      if (apiError.isNetworkError) {
+        errorMessage =
+          'Network error. Please check your internet connection and ensure the backend server is running.';
+      }
+
+      showErrorToast('Upload Failed', errorMessage);
     }
   };
 
@@ -218,12 +398,39 @@ const UploadStatusScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleReview = useCallback(
     (item: UploadItem) => {
+      console.log('🚀 ~ UploadStatusScreen ~ item.status:', item);
+      console.log(
+        '🚀 ~ UploadStatusScreen ~ item.processedData:',
+        item.processedData,
+      );
+      console.log(
+        '🚀 ~ UploadStatusScreen ~ item:',
+        JSON.stringify(item, null, 2),
+      );
+
       if (item.status === 'completed' && item.processedData) {
-        navigation.navigate('ReviewClothing', {
+        console.log('✅ Navigating to ReviewClothing with:', {
           itemId: item.id,
           data: item.processedData,
           imageUri: item.imageUri,
         });
+
+        try {
+          navigation.navigate('ReviewClothing', {
+            itemId: item.id,
+            data: item.processedData,
+            imageUri: item.imageUri,
+          });
+        } catch (navError) {
+          console.error('❌ Navigation error:', navError);
+        }
+      } else {
+        console.warn(
+          '⚠️ Cannot navigate - status:',
+          item.status,
+          'hasData:',
+          !!item.processedData,
+        );
       }
     },
     [navigation],
@@ -272,7 +479,8 @@ const UploadStatusScreen: React.FC<Props> = ({ navigation }) => {
             {item.status === 'completed' && item.processedData && (
               <View>
                 <Text className="text-base font-semibold text-slate-900 mb-1">
-                  {item.processedData.name}
+                  {item.processedData.type.charAt(0).toUpperCase() +
+                    item.processedData.type.slice(1)}
                 </Text>
                 <View className="flex-row flex-wrap gap-1">
                   {item.processedData.tags.slice(0, 2).map((tag, idx) => (

@@ -53,6 +53,15 @@ export interface PreferencesResponse {
   data?: UserPreferences;
 }
 
+// Clothing Attributes Types
+export interface ClothingAttributesResponse {
+  data: {
+    types: string[];
+    patterns: string[];
+    tags: string[];
+  };
+}
+
 // Clothes Types - See updated types below in Home/Dashboard section
 
 export interface DeleteClothesResponse {
@@ -63,24 +72,133 @@ export interface DeleteClothesResponse {
 // Upload Types
 export interface UploadRequest {
   image: File | Blob;
-  autoTag?: boolean;
 }
 
 export interface UploadResponse {
-  success: boolean;
   message: string;
-  data?: {
+  uploadId: string;
+  status: 'pending';
+  uploadedAt: string;
+}
+
+export interface UploadStatusResponse {
+  success: boolean;
+  data: {
     id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    uploadedAt: string;
+    processedAt?: string | null;
+    processedData?: {
+      type: string;
+      colorHex: string;
+      pattern: string;
+      tags: string[];
+      gender: string | null;
+    } | null;
+    error?: string | null;
+  };
+}
+
+export interface UploadHistoryParams {
+  page?: number;
+  limit?: number;
+  status?: 'pending' | 'processing' | 'completed' | 'failed' | 'all';
+  sort?: 'newest' | 'oldest';
+}
+
+export interface UploadHistoryResponse {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  uploads: Array<{
+    id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    uploadedAt: string;
+    processedAt?: string;
     imageUrl: string;
-    tags?: string[];
-    category?: string;
-    color?: string;
-    aiSuggestions?: {
-      category?: string;
-      color?: string;
-      season?: string[];
-      style?: string[];
+    processedData?: {
+      type: string;
+      colorHex: string;
+      pattern: string;
+      tags: string[];
+      gender: string | null;
     };
+  }>;
+}
+
+// Outfit Types
+export interface OutfitGenerateParams {
+  limit?: number;
+  preview?: boolean;
+  lat?: number;
+  lon?: number;
+}
+
+export interface OutfitItem {
+  _id: string;
+  userId: string;
+  items: any[]; // Array of clothing item IDs
+  styleType: string;
+  explanation?: string;
+  previewPath?: string | null;
+  weather?: {
+    temp: number;
+    rainChance: number;
+  };
+  worn?: boolean;
+  wornAt?: string;
+  generatedAt: string;
+}
+
+export interface OutfitGenerateResponse {
+  message: string;
+  outfits: OutfitItem[];
+}
+
+export interface OutfitHistoryParams {
+  page?: number;
+  limit?: number;
+  worn?: boolean;
+}
+
+export interface OutfitHistoryResponse {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  items: OutfitItem[];
+}
+
+export interface MarkOutfitWornResponse {
+  message: string;
+  outfit: {
+    _id: string;
+    userId: string;
+    worn: boolean;
+    wornAt: string;
+  };
+}
+
+// Clothes Update Types
+export interface UpdateClothingRequest {
+  type?: string;
+  colorHex?: string;
+  pattern?: string;
+  tags?: string[];
+}
+
+export interface UpdateClothingResponse {
+  message: string;
+  data: {
+    _id: string;
+    userId: string;
+    type: string;
+    colorHex: string;
+    pattern: string;
+    tags: string[];
   };
 }
 
