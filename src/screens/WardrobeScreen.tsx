@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   FlatList,
   TouchableOpacity,
   Text,
   ListRenderItem,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { Footprints, Shirt } from 'lucide-react-native';
 import {
@@ -15,58 +17,23 @@ import {
   EmptyWardrobe,
 } from '../components/wardrobe';
 import Container from '../components/Container';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { WardrobeStackParamList } from '../navigation/types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import {
   ShirtIcon,
   TShirtIcon,
   JeansIcon,
 } from '../components/icons/ClothingIcons';
+import apiService from '../services/api.service';
+import { ClothingItem } from '../types/api.types';
+import { showErrorToast } from '../utils/toast';
+import WardrobeScreenSkeleton from '../components/wardrobe/WardrobeScreenSkeleton';
+import { useNavigation } from '@react-navigation/native';
 
-interface ClothingItem {
-  id: string;
-  name: string;
-  category: string;
-  imageUrl?: string;
-  lastWorn: string;
-  tags: string[];
-}
-
-// Mock data - replace with actual data from Redux/API
-const MOCK_CLOTHING_ITEMS = [
-  {
-    id: '1',
-    name: 'Green Casual Shirt',
-    category: 'Shirts',
-    imageUrl: undefined,
-    lastWorn: '3 days ago',
-    tags: ['Casual', 'Summer'],
-  },
-  {
-    id: '2',
-    name: 'Blue Denim Jeans',
-    category: 'Jeans',
-    imageUrl: undefined,
-    lastWorn: '1 week ago',
-    tags: ['Casual'],
-  },
-  {
-    id: '3',
-    name: 'White T-Shirt',
-    category: 'T-Shirts',
-    imageUrl: undefined,
-    lastWorn: 'Yesterday',
-    tags: ['Casual', 'Basic'],
-  },
-  {
-    id: '4',
-    name: 'Black Sneakers',
-    category: 'Shoes',
-    imageUrl: undefined,
-    lastWorn: '2 days ago',
-    tags: ['Sport'],
-  },
-];
+type WardrobeScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'ClothingDetails'
+>;
 
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: undefined },
@@ -76,31 +43,103 @@ const CATEGORIES = [
   { id: 'shoes', label: 'Shoes', icon: Footprints },
 ];
 
-const WardrobeScreen = ({ navigation }: any) => {
+const WardrobeScreen = () => {
+  const navigation = useNavigation<WardrobeScreenNavigationProp>();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploadSheetVisible, setUploadSheetVisible] = useState(false);
 
-  // For demo purposes, set to empty array to show empty state
-  // Change to MOCK_CLOTHING_ITEMS to see the grid
-  const [clothingItems] = useState<ClothingItem[]>(MOCK_CLOTHING_ITEMS);
+  // API state
+  const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const filteredItems = useMemo(
-    () =>
-      selectedCategory === 'all'
-        ? clothingItems
-        : clothingItems.filter(
-            item => item.category.toLowerCase() === selectedCategory,
-          ),
-    [selectedCategory, clothingItems],
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Fetch clothes from API
+  const fetchClothes = useCallback(
+    async (page: number = 1, refresh: boolean = false) => {
+      try {
+        if (refresh) {
+          setIsRefreshing(true);
+        } else if (page === 1) {
+          setIsLoading(true);
+        } else {
+          setIsLoadingMore(true);
+        }
+
+        const params: any = {
+          page,
+          limit: 20,
+          sort: 'createdAt',
+          order: 'desc' as 'desc',
+        };
+
+        // Add category filter if not 'all'
+        if (selectedCategory !== 'all') {
+          params.type = selectedCategory;
+        }
+
+        console.log('📡 Fetching clothes with params:', params);
+        const response = await apiService.getClothes(params);
+        console.log('✅ Fetched clothes:', response.data);
+
+        if (refresh || page === 1) {
+          setClothingItems(response.data.items);
+        } else {
+          // Append for pagination
+          setClothingItems(prev => [...prev, ...response.data.items]);
+        }
+
+        setCurrentPage(response.data.page);
+        setTotalPages(response.data.totalPages);
+        setHasNextPage(response.data.hasNextPage);
+        setTotalItems(response.data.total);
+      } catch (error: any) {
+        console.error('❌ Error fetching clothes:', error);
+        showErrorToast(
+          'Error',
+          error.userMessage || 'Failed to load wardrobe items',
+        );
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [selectedCategory],
   );
+
+  // Initial load
+  useEffect(() => {
+    fetchClothes(1);
+  }, [selectedCategory]);
+
+  // Refresh handler
+  const handleRefresh = useCallback(() => {
+    fetchClothes(1, true);
+  }, [fetchClothes]);
+
+  // Load more handler
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasNextPage) {
+      fetchClothes(currentPage + 1);
+    }
+  }, [isLoadingMore, hasNextPage, currentPage, fetchClothes]);
 
   const handleTakePhoto = useCallback(() => {
     console.log('Take photo');
+    setUploadSheetVisible(false);
     // TODO: Implement camera functionality
   }, []);
 
   const handleUploadPhoto = useCallback(() => {
     console.log('Upload photo');
+    setUploadSheetVisible(false);
     // TODO: Implement gallery picker
   }, []);
 
@@ -130,21 +169,21 @@ const WardrobeScreen = ({ navigation }: any) => {
         style={{ marginBottom: 12, marginRight: index % 2 === 0 ? 12 : 0 }}
       >
         <ClothingCard
-          id={item.id}
-          name={item.name}
-          category={item.category}
-          imageUrl={item.imageUrl}
-          lastWorn={item.lastWorn}
+          id={item._id}
+          name={item.type}
+          category={item.type}
+          imageUrl={item.filePath}
+          lastWorn={item.isDirty ? 'Needs wash' : 'Clean'}
           tags={item.tags}
-          onPress={() => handleClothingPress(item.id)}
-          onLongPress={() => console.log('Long press:', item.id)}
+          onPress={() => handleClothingPress(item._id)}
+          onLongPress={() => console.log('Long press:', item._id)}
         />
       </View>
     ),
     [handleClothingPress],
   );
 
-  const keyExtractor = useCallback((item: ClothingItem) => item.id, []);
+  const keyExtractor = useCallback((item: ClothingItem) => item._id, []);
   const categoryKeyExtractor = useCallback(
     (item: (typeof CATEGORIES)[0]) => item.id,
     [],
@@ -155,44 +194,73 @@ const WardrobeScreen = ({ navigation }: any) => {
       <>
         {/* Header */}
         <WardrobeHeader
-          itemCount={clothingItems.length}
+          itemCount={totalItems}
           onAddPress={() => setUploadSheetVisible(true)}
         />
 
-        {clothingItems.length > 0 && (
-          /* Category Chips */
-          <View className="mb-4">
-            <FlatList
-              horizontal
-              data={CATEGORIES}
-              renderItem={renderCategoryChip}
-              keyExtractor={categoryKeyExtractor}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingRight: 40,
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            />
-          </View>
-        )}
+        {/* {clothingItems.length > 0 && ( */}
+
+        <View className="mb-4">
+          <FlatList
+            horizontal
+            data={CATEGORIES}
+            renderItem={renderCategoryChip}
+            keyExtractor={categoryKeyExtractor}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingRight: 40,
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          />
+        </View>
+        {/* )} */}
       </>
     ),
-    [clothingItems.length, renderCategoryChip, categoryKeyExtractor],
+    [
+      totalItems,
+      clothingItems.length,
+      renderCategoryChip,
+      categoryKeyExtractor,
+    ],
   );
 
-  const renderEmptyComponent = useCallback(() => <EmptyWardrobe />, []);
+  const renderEmptyComponent = useCallback(() => {
+    if (isLoading) {
+      return null;
+    }
+    return <EmptyWardrobe />;
+  }, [isLoading]);
+
+  const renderFooter = useCallback(() => {
+    if (!isLoadingMore) return null;
+    return (
+      <View className="py-4 items-center">
+        <ActivityIndicator size="small" color="#a3e635" />
+      </View>
+    );
+  }, [isLoadingMore]);
+
+  // Show skeleton on initial load
+  if (isLoading && !isRefreshing) {
+    return (
+      <Container pt={10}>
+        <WardrobeScreenSkeleton />
+      </Container>
+    );
+  }
 
   return (
     <Container pt={10}>
       <View className="flex-1">
         <FlatList
-          data={clothingItems.length === 0 ? [] : filteredItems}
+          data={clothingItems}
           renderItem={renderClothingItem}
           keyExtractor={keyExtractor}
           ListHeaderComponent={renderListHeader}
           ListEmptyComponent={renderEmptyComponent}
+          ListFooterComponent={renderFooter}
           numColumns={2}
           columnWrapperStyle={
             clothingItems.length > 0 ? { paddingHorizontal: 20 } : undefined
@@ -201,6 +269,16 @@ const WardrobeScreen = ({ navigation }: any) => {
             paddingBottom: 96,
           }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={['#a3e635']}
+              tintColor="#a3e635"
+            />
+          }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
         />
       </View>
 

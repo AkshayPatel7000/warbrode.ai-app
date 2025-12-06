@@ -21,6 +21,13 @@ const BottomTabNavigator = () => {
       tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
         name="OutfitGenerator"
         component={OutfitGeneratorScreen}
         options={{
@@ -36,13 +43,7 @@ const BottomTabNavigator = () => {
           tabBarIcon: ({ color, size }) => <Plus color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
-        }}
-      />
+
       <Tab.Screen
         name="Wardrobe"
         component={WardrobeScreen}

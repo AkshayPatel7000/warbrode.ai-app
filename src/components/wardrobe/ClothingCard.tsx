@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, Image } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { getFullImageUrl } from '../../utils/helpers';
 
 interface ClothingCardProps {
   id: string;
@@ -21,17 +22,23 @@ const ClothingCard: React.FC<ClothingCardProps> = ({
   onPress,
   onLongPress,
 }) => {
+  // Construct full image URL
+  const fullImageUrl = imageUrl ? getFullImageUrl(imageUrl) : undefined;
+
   return (
     <TouchableOpacity
       onPress={onPress}
       onLongPress={onLongPress}
       className="bg-white rounded-2xl shadow-sm shadow-slate-200/50 overflow-hidden mb-4"
-      activeOpacity={0.7}>
+      activeOpacity={0.7}
+    >
       {/* Image Container */}
       <View className="w-full aspect-square bg-slate-100 items-center justify-center">
-        {imageUrl ? (
+        {fullImageUrl ? (
           <Image
-            source={{ uri: imageUrl }}
+            source={{
+              uri: fullImageUrl,
+            }}
             className="w-full h-full"
             resizeMode="cover"
           />
@@ -47,10 +54,13 @@ const ClothingCard: React.FC<ClothingCardProps> = ({
 
       {/* Info Container */}
       <View className="p-3">
-        <Text className="text-base font-semibold text-slate-900" numberOfLines={1}>
+        <Text
+          className="text-base font-semibold text-slate-900"
+          numberOfLines={1}
+        >
           {name}
         </Text>
-        
+
         {category && (
           <Text className="text-xs text-slate-500 mt-1" numberOfLines={1}>
             {category}
@@ -68,7 +78,8 @@ const ClothingCard: React.FC<ClothingCardProps> = ({
             {tags.slice(0, 2).map((tag, index) => (
               <View
                 key={index}
-                className="bg-lime-100 rounded-full px-2 py-1 mr-1 mb-1">
+                className="bg-lime-100 rounded-full px-2 py-1 mr-1 mb-1"
+              >
                 <Text className="text-xs text-lime-800">{tag}</Text>
               </View>
             ))}

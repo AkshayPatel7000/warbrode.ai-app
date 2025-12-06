@@ -29,6 +29,7 @@ import ScreenHeader from '../components/common/ScreenHeader';
 import ApiService from '../services/api.service';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 import type { ApiErrorExtended } from '../types/error.types';
+import { getFullImageUrl } from '../utils/helpers';
 
 type Props = CompositeScreenProps<
   NativeStackScreenProps<CreateStackParamList, 'UploadStatus'>,
@@ -78,7 +79,7 @@ const UploadStatusScreen: React.FC<Props> = ({ navigation, route }) => {
 
       const uploadItems: UploadItem[] = response.data.uploads.map(upload => ({
         id: upload.id,
-        imageUri: 'https://ql0rfdpp-4000.inc1.devtunnels.ms/' + upload.imageUrl,
+        imageUri: getFullImageUrl(upload.imageUrl),
         status: upload.status,
         uploadedAt: new Date(upload.uploadedAt),
         processedData: upload.processedData,

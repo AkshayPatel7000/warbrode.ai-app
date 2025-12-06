@@ -247,7 +247,7 @@ export interface ClothingItem {
   pattern: string;
   tags: string[];
   isDirty: boolean;
-  imageUrl: string;
+  filePath: string;
   createdAt: string;
 }
 

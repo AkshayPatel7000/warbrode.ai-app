@@ -37,6 +37,9 @@ export type BottomTabParamList = {
 
 export type WardrobeStackParamList = {
   WardrobeMain: undefined;
+  ClothingDetails: {
+    itemId: string;
+  };
 };
 
 export type CreateStackParamList = {

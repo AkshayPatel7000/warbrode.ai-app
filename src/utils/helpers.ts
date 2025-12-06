@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@env';
+
 /**
  * Format a date to a readable string
  */
@@ -49,4 +51,8 @@ export const debounce = <T extends (...args: any[]) => any>(
     }
     timeout = setTimeout(() => func(...args), wait);
   };
+};
+
+export const getFullImageUrl = (imageUrl: string): string => {
+  return `${API_BASE_URL}/${imageUrl}`;
 };

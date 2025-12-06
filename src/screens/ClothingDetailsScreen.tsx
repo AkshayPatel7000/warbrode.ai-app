@@ -12,11 +12,13 @@ import {
 } from '../components/clothing';
 import Container from '../components/Container';
 import { RootStackParamList } from '../navigation/types';
+import { useNavigation } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ClothingDetails'>;
 
-const ClothingDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
+const ClothingDetailsScreen: React.FC<Props> = ({ route }) => {
   const { itemId } = route.params;
+  const navigation = useNavigation();
 
   // Mock data - replace with actual data from Redux/API
   const [clothingItem, setClothingItem] = useState({
