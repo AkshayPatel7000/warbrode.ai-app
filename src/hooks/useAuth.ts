@@ -1,8 +1,11 @@
-import {useAppDispatch, useAppSelector} from './useRedux';
-import {setCredentials, logout as logoutAction} from '../store/slices/authSlice';
-import {setUser, clearUser} from '../store/slices/userSlice';
+import { useAppDispatch, useAppSelector } from './useRedux';
+import {
+  setCredentials,
+  logout as logoutAction,
+} from '../store/slices/authSlice';
+import { setUser, clearUser } from '../store/slices/userSlice';
 import apiService from '../services/api.service';
-import {API_ENDPOINTS} from '../constants/api';
+import { API_ENDPOINTS } from '../constants/api';
 
 interface SignupData {
   name: string;
@@ -24,8 +27,8 @@ interface UseAuthReturn {
 
 export const useAuth = (): UseAuthReturn => {
   const dispatch = useAppDispatch();
-  const {isAuthenticated, error} = useAppSelector(state => state.auth);
-  const {currentUser, loading} = useAppSelector(state => state.user);
+  const { isAuthenticated, error } = useAppSelector(state => state.auth);
+  const { currentUser, loading } = useAppSelector(state => state.user);
 
   const login = async (email: string, password: string) => {
     try {
@@ -34,13 +37,13 @@ export const useAuth = (): UseAuthReturn => {
         password,
       });
 
-      const {token, refreshToken, user} = response.data as {
+      const { token, refreshToken, user } = response.data as {
         token: string;
         refreshToken: string;
         user: any;
       };
 
-      dispatch(setCredentials({token, refreshToken}));
+      dispatch(setCredentials({ token, refreshToken }));
       dispatch(setUser(user));
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'Login failed');
@@ -49,15 +52,15 @@ export const useAuth = (): UseAuthReturn => {
 
   const signup = async (data: SignupData) => {
     try {
-      const response = await apiService.post(API_ENDPOINTS.AUTH.REGISTER, data);
+      const response = await apiService.post(API_ENDPOINTS.AUTH.SIGNUP, data);
 
-      const {token, refreshToken, user} = response.data as {
+      const { token, refreshToken, user } = response.data as {
         token: string;
         refreshToken: string;
         user: any;
       };
 
-      dispatch(setCredentials({token, refreshToken}));
+      dispatch(setCredentials({ token, refreshToken }));
       dispatch(setUser(user));
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'Signup failed');
@@ -81,7 +84,7 @@ export const useAuth = (): UseAuthReturn => {
 
   const forgotPassword = async (email: string) => {
     try {
-      await apiService.post('/auth/forgot-password', {email});
+      await apiService.post('/auth/forgot-password', { email });
     } catch (err: any) {
       throw new Error(
         err.response?.data?.message || 'Password reset request failed',

@@ -16,10 +16,13 @@ import type {
   DeviceTokenResponse,
   UserPreferences,
   PreferencesResponse,
+  DashboardResponse,
+  ClothesListParams,
   ClothesListResponse,
   DeleteClothesResponse,
   UploadResponse,
 } from '../types/api.types';
+import type { ApiErrorExtended } from '../types/error.types';
 
 class ApiService {
   private axiosInstance: AxiosInstance;
@@ -73,9 +76,77 @@ class ApiService {
           return Promise.reject(error);
         }
 
-        return Promise.reject(error);
+        // Transform error to include user-friendly message
+        const transformedError = this.transformError(error);
+        return Promise.reject(transformedError);
       },
     );
+  }
+
+  /**
+   * Transform error to include user-friendly message
+   * Prioritizes backend error messages
+   */
+  private transformError(error: any): ApiErrorExtended {
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+
+      // Prioritize backend error message
+      let message = data?.message || data?.error;
+
+      // Fallback messages if backend doesn't provide one
+      if (!message) {
+        switch (status) {
+          case 400:
+            message = 'Invalid input. Please check your details.';
+            break;
+          case 401:
+            message = 'Invalid credentials. Please try again.';
+            break;
+          case 403:
+            message = 'You do not have permission to perform this action.';
+            break;
+          case 404:
+            message = 'The requested resource was not found.';
+            break;
+          case 409:
+            message = 'This resource already exists.';
+            break;
+          case 422:
+            message = 'Validation error. Please check your input.';
+            break;
+          case 429:
+            message = 'Too many requests. Please try again later.';
+            break;
+          case 500:
+            message = 'Server error. Please try again later.';
+            break;
+          case 503:
+            message = 'Service temporarily unavailable.';
+            break;
+          default:
+            message = 'An unexpected error occurred.';
+        }
+      }
+
+      // Attach user-friendly message and field errors
+      error.userMessage = message;
+      error.statusCode = status;
+      error.fieldErrors = data?.errors || {};
+    } else if (error.request) {
+      // Network error
+      error.userMessage =
+        'Network error. Please check your internet connection.';
+      error.statusCode = 0;
+      error.isNetworkError = true;
+    } else {
+      // Other errors
+      error.userMessage = error.message || 'An unexpected error occurred.';
+      error.statusCode = -1;
+    }
+
+    return error;
   }
 
   // Generic HTTP methods
@@ -152,9 +223,18 @@ class ApiService {
     );
   }
 
+  // Home/Dashboard API methods
+  public async getDashboard(): Promise<AxiosResponse<DashboardResponse>> {
+    return this.get<DashboardResponse>(API_ENDPOINTS.HOME.DASHBOARD);
+  }
+
   // Clothes API methods
-  public async getClothes(): Promise<AxiosResponse<ClothesListResponse>> {
-    return this.get<ClothesListResponse>(API_ENDPOINTS.CLOTHES.LIST);
+  public async getClothes(
+    params?: ClothesListParams,
+  ): Promise<AxiosResponse<ClothesListResponse>> {
+    return this.get<ClothesListResponse>(API_ENDPOINTS.CLOTHES.LIST, {
+      params,
+    });
   }
 
   public async deleteClothes(

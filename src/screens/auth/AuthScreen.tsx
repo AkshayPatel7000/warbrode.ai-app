@@ -22,6 +22,7 @@ import ApiService from '../../services/api.service';
 import { setCredentials, setAuthError } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice';
 import type { LoginRequest, SignupRequest } from '../../types/api.types';
+import type { ApiErrorExtended } from '../../types/error.types';
 
 type AuthMode = 'login' | 'signup';
 
@@ -78,10 +79,13 @@ const AuthScreen = () => {
         };
 
         const response = await ApiService.login(loginData);
-        console.log('🚀 ~ handleAuthSubmit ~ response:', response.data);
 
         if (response.data.success && response.data.user) {
           const { token, refreshToken, userId, email } = response.data.user;
+          console.log(
+            '🚀 ~ handleAuthSubmit ~ response.data.user:',
+            response.data.user,
+          );
 
           // Store credentials in Redux
           dispatch(
@@ -123,8 +127,14 @@ const AuthScreen = () => {
 
         const response = await ApiService.signup(signupData);
 
-        if (response.data.success && response.data.data) {
-          const { token, userId, email } = response.data.data;
+        if (response.data.success && response.data.user) {
+          const { token, userId, email } = response.data.user;
+          console.log(
+            '🚀 ~ handleAuthSubmit ~ token, userId, email:',
+            token,
+            userId,
+            email,
+          );
 
           // Store credentials in Redux
           dispatch(
@@ -157,62 +167,39 @@ const AuthScreen = () => {
           showErrorToast('Signup Failed', errorMessage);
         }
       }
-    } catch (error: any) {
-      console.error('Authentication error:', error);
+    } catch (error) {
+      const apiError = error as ApiErrorExtended;
+      console.error('Authentication error:', apiError);
 
-      let errorTitle = mode === 'login' ? 'Login Failed' : 'Signup Failed';
-      let errorMessage = 'Please try again later';
+      // Use the error message from the API service interceptor
+      const errorMessage =
+        apiError.userMessage || 'An unexpected error occurred';
+      const errorTitle = mode === 'login' ? 'Login Failed' : 'Signup Failed';
 
-      if (error.response) {
-        // Server responded with error status
-        const status = error.response.status;
-        const data = error.response.data;
-
-        switch (status) {
-          case 400:
-            errorMessage =
-              data?.message || 'Invalid input. Please check your details.';
-            // Handle field-specific errors
-            if (data?.errors) {
-              Object.keys(data.errors).forEach(field => {
-                setFieldError(field, data.errors[field]);
-              });
-            }
-            break;
-          case 401:
-            errorMessage = 'Invalid email or password';
-            setFieldError('email', ' ');
-            setFieldError('password', 'Invalid credentials');
-            break;
-          case 409:
-            errorMessage = 'An account with this email already exists';
-            setFieldError('email', 'Email already registered');
-            break;
-          case 422:
-            errorMessage =
-              data?.message || 'Validation error. Please check your input.';
-            break;
-          case 429:
-            errorMessage = 'Too many attempts. Please try again later.';
-            break;
-          case 500:
-            errorMessage = 'Server error. Please try again later.';
-            break;
-          default:
-            errorMessage = data?.message || 'An unexpected error occurred';
-        }
-
-        dispatch(setAuthError(errorMessage));
-      } else if (error.request) {
-        // Request made but no response
-        errorMessage = 'Network error. Please check your internet connection.';
-        dispatch(setAuthError(errorMessage));
-      } else {
-        // Other errors
-        errorMessage = error.message || 'An unexpected error occurred';
-        dispatch(setAuthError(errorMessage));
+      // Handle field-specific errors if available
+      if (
+        apiError.fieldErrors &&
+        Object.keys(apiError.fieldErrors).length > 0
+      ) {
+        Object.keys(apiError.fieldErrors).forEach(field => {
+          setFieldError(field, apiError.fieldErrors![field]);
+        });
       }
 
+      // Special handling for 401 errors - highlight password field
+      if (apiError.statusCode === 401 && mode === 'login') {
+        setFieldError('password', 'Invalid credentials');
+      }
+
+      // Special handling for 409 errors - highlight email field
+      if (apiError.statusCode === 409 && mode === 'signup') {
+        setFieldError('email', 'Email already registered');
+      }
+
+      // Store error in Redux
+      dispatch(setAuthError(errorMessage));
+
+      // Show error toast
       showErrorToast(errorTitle, errorMessage);
     } finally {
       setSubmitting(false);

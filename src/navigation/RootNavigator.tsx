@@ -13,7 +13,8 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const RootNavigator = () => {
-  const { isAuthenticated } = useAppSelector(state => state.auth);
+  const { isAuthenticated, token } = useAppSelector(state => state.auth);
+  console.log('🚀 ~ RootNavigator ~ token:', token);
 
   return (
     <NavigationContainer>
