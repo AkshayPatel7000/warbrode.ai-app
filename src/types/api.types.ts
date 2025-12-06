@@ -23,7 +23,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   message: string;
-  data?: {
+  user?: {
     userId: string;
     email: string;
     token: string;

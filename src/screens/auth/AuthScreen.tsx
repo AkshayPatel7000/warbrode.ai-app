@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { MotiView } from 'moti';
@@ -17,6 +18,10 @@ import { AuthButton, AuthInput, SocialButton } from '../../components/auth';
 import { AuthStackParamList } from '../../navigation/types';
 import Container from '../../components/Container';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
+import ApiService from '../../services/api.service';
+import { setCredentials, setAuthError } from '../../store/slices/authSlice';
+import { setUser } from '../../store/slices/userSlice';
+import type { LoginRequest, SignupRequest } from '../../types/api.types';
 
 type AuthMode = 'login' | 'signup';
 
@@ -39,6 +44,7 @@ const signupSchema = Yup.object().shape({
 
 const AuthScreen = () => {
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+  const dispatch = useDispatch();
   const [mode, setMode] = useState<AuthMode>('login');
   const [toggleWidth, setToggleWidth] = useState(0);
 
@@ -59,27 +65,155 @@ const AuthScreen = () => {
     }
   };
 
-  const handleAuthSubmit = async (values: any, { setSubmitting }: any) => {
+  const handleAuthSubmit = async (
+    values: any,
+    { setSubmitting, setFieldError }: any,
+  ) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
       if (mode === 'login') {
-        showSuccessToast('Welcome back!', 'Successfully logged in');
+        // Login flow
+        const loginData: LoginRequest = {
+          email: values.email.trim(),
+          password: values.password,
+        };
+
+        const response = await ApiService.login(loginData);
+        console.log('🚀 ~ handleAuthSubmit ~ response:', response.data);
+
+        if (response.data.success && response.data.user) {
+          const { token, refreshToken, userId, email } = response.data.user;
+
+          // Store credentials in Redux
+          dispatch(
+            setCredentials({
+              token,
+              refreshToken: refreshToken || '',
+            }),
+          );
+
+          // Store user info in Redux
+          dispatch(
+            setUser({
+              id: userId,
+              email: email,
+              name: values.email.split('@')[0], // Temporary until we get name from API
+            }),
+          );
+
+          showSuccessToast('Welcome back!', 'Successfully logged in');
+
+          // Navigate to main app
+          if (navigation) {
+            // @ts-ignore - Navigate to root stack
+            navigation.getParent()?.replace('MainTabs');
+          }
+        } else {
+          // API returned success: false
+          const errorMessage = response.data.message || 'Login failed';
+          dispatch(setAuthError(errorMessage));
+          showErrorToast('Login Failed', errorMessage);
+        }
       } else {
-        showSuccessToast('Account Created', 'Welcome to WardrobeAI!');
+        // Signup flow
+        const signupData: SignupRequest = {
+          email: values.email.trim(),
+          password: values.password,
+          name: values.name.trim(),
+        };
+
+        const response = await ApiService.signup(signupData);
+
+        if (response.data.success && response.data.data) {
+          const { token, userId, email } = response.data.data;
+
+          // Store credentials in Redux
+          dispatch(
+            setCredentials({
+              token,
+              refreshToken: '', // Signup might not return refresh token
+            }),
+          );
+
+          // Store user info in Redux
+          dispatch(
+            setUser({
+              id: userId,
+              email: email,
+              name: values.name,
+            }),
+          );
+
+          showSuccessToast('Account Created', 'Welcome to WardrobeAI!');
+
+          // Navigate to main app
+          if (navigation) {
+            // @ts-ignore - Navigate to root stack
+            navigation.getParent()?.replace('MainTabs');
+          }
+        } else {
+          // API returned success: false
+          const errorMessage = response.data.message || 'Signup failed';
+          dispatch(setAuthError(errorMessage));
+          showErrorToast('Signup Failed', errorMessage);
+        }
+      }
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+
+      let errorTitle = mode === 'login' ? 'Login Failed' : 'Signup Failed';
+      let errorMessage = 'Please try again later';
+
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const data = error.response.data;
+
+        switch (status) {
+          case 400:
+            errorMessage =
+              data?.message || 'Invalid input. Please check your details.';
+            // Handle field-specific errors
+            if (data?.errors) {
+              Object.keys(data.errors).forEach(field => {
+                setFieldError(field, data.errors[field]);
+              });
+            }
+            break;
+          case 401:
+            errorMessage = 'Invalid email or password';
+            setFieldError('email', ' ');
+            setFieldError('password', 'Invalid credentials');
+            break;
+          case 409:
+            errorMessage = 'An account with this email already exists';
+            setFieldError('email', 'Email already registered');
+            break;
+          case 422:
+            errorMessage =
+              data?.message || 'Validation error. Please check your input.';
+            break;
+          case 429:
+            errorMessage = 'Too many attempts. Please try again later.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = data?.message || 'An unexpected error occurred';
+        }
+
+        dispatch(setAuthError(errorMessage));
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'Network error. Please check your internet connection.';
+        dispatch(setAuthError(errorMessage));
+      } else {
+        // Other errors
+        errorMessage = error.message || 'An unexpected error occurred';
+        dispatch(setAuthError(errorMessage));
       }
 
-      // Navigate to main app
-      if (navigation) {
-        // @ts-ignore - Navigate to root stack
-        navigation.getParent()?.replace('MainTabs');
-      }
-    } catch (error) {
-      showErrorToast(
-        'Authentication Failed',
-        'Please check your credentials and try again',
-      );
+      showErrorToast(errorTitle, errorMessage);
     } finally {
       setSubmitting(false);
     }
