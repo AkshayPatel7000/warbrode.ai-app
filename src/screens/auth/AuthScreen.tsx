@@ -23,6 +23,7 @@ import { setCredentials, setAuthError } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice';
 import type { LoginRequest, SignupRequest } from '../../types/api.types';
 import type { ApiErrorExtended } from '../../types/error.types';
+import { API_BASE_URL } from '@env';
 
 type AuthMode = 'login' | 'signup';
 
@@ -439,6 +440,7 @@ const AuthScreen = () => {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <Text>{API_BASE_URL}</Text>
     </Container>
   );
 };
