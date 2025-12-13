@@ -23,6 +23,7 @@ import {
   StatCard,
   QuickActionButton,
   AITipCard,
+  EmptyState,
 } from '../components/home';
 import { HomeScreenSkeleton } from '../components/home/HomeScreenSkeleton';
 import Container from '../components/Container';
@@ -35,6 +36,7 @@ import { showErrorToast } from '../utils/toast';
 const HomeScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(
     null,
   );
@@ -107,6 +109,7 @@ const HomeScreen = () => {
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
+        setIsRetrying(false);
       }
     },
     [getCurrentLocation],
@@ -194,6 +197,14 @@ const HomeScreen = () => {
   }, [loadDashboard]);
 
   /**
+   * Handle manual retry from empty state
+   */
+  const handleRetry = useCallback(() => {
+    setIsRetrying(true);
+    loadDashboard(false);
+  }, [loadDashboard]);
+
+  /**
    * Initial load
    */
   useEffect(() => {
@@ -253,9 +264,21 @@ const HomeScreen = () => {
   if (!dashboardData) {
     return (
       <Container pt={10}>
-        <View className="flex-1 items-center justify-center">
-          {/* TODO: Add error state UI */}
-        </View>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#6366f1"
+              colors={['#6366f1']}
+            />
+          }
+          contentContainerStyle={{ flex: 1 }}
+        >
+          <EmptyState onRetry={handleRetry} isRetrying={isRetrying} />
+        </ScrollView>
       </Container>
     );
   }

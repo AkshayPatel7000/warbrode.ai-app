@@ -5,4 +5,4 @@ export { default as StatCard } from './StatCard';
 export { default as QuickActionButton } from './QuickActionButton';
 export { default as AITipCard } from './AITipCard';
 export { HomeScreenSkeleton } from './HomeScreenSkeleton';
-
+export { EmptyState } from './EmptyState';
