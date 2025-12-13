@@ -31,6 +31,26 @@ export interface LoginResponse {
   };
 }
 
+export interface GoogleLoginRequest {
+  idToken: string;
+  email: string;
+  name?: string;
+  photoURL?: string;
+}
+
+export interface GoogleLoginResponse {
+  success: boolean;
+  message: string;
+  user?: {
+    token: string;
+    userId: string;
+    email: string;
+    name?: string;
+    refreshToken?: string;
+    isNewUser: boolean;
+  };
+}
+
 export interface DeviceTokenRequest {
   deviceToken: string;
   platform?: 'ios' | 'android';

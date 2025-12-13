@@ -12,6 +12,8 @@ import type {
   SignupResponse,
   LoginRequest,
   LoginResponse,
+  GoogleLoginRequest,
+  GoogleLoginResponse,
   DeviceTokenRequest,
   DeviceTokenResponse,
   UserPreferences,
@@ -39,15 +41,28 @@ class ApiService {
   private axiosInstance: AxiosInstance;
 
   constructor() {
+    // Initialize with default baseURL (will be updated from settings)
     this.axiosInstance = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL:
+        store.getState().settings?.settings?.baseUrl ||
+        API_BASE_URL ||
+        'http://localhost:3000',
       timeout: parseInt(API_TIMEOUT, 10) || 30000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
-
+    console.log('API baseURL:', this.axiosInstance.defaults.baseURL);
     this.setupInterceptors();
+  }
+
+  /**
+   * Update base URL from settings
+   * Called when settings are loaded from Firestore
+   */
+  public updateBaseUrl(baseUrl: string): void {
+    this.axiosInstance.defaults.baseURL = baseUrl;
+    console.log('🔄 API baseURL updated to:', baseUrl);
   }
 
   private setupInterceptors(): void {
@@ -56,6 +71,12 @@ class ApiService {
       (config: InternalAxiosRequestConfig) => {
         const state = store.getState();
         const token = state.auth.token;
+
+        // Update baseURL from settings if available
+        const settings = state.settings?.settings;
+        if (settings?.baseUrl && config.baseURL !== settings.baseUrl) {
+          config.baseURL = settings.baseUrl;
+        }
 
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -226,6 +247,15 @@ class ApiService {
     data: LoginRequest,
   ): Promise<AxiosResponse<LoginResponse>> {
     return this.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, data);
+  }
+
+  public async googleLogin(
+    data: GoogleLoginRequest,
+  ): Promise<AxiosResponse<GoogleLoginResponse>> {
+    return this.post<GoogleLoginResponse>(
+      API_ENDPOINTS.AUTH.GOOGLE_LOGIN,
+      data,
+    );
   }
 
   public async registerDeviceToken(

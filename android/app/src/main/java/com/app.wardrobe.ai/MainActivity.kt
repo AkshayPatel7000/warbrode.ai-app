@@ -1,4 +1,4 @@
-package com.wardrobeai
+package com.app.wardrobe.ai
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

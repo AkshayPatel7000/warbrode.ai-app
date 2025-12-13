@@ -2,6 +2,7 @@ export const API_ENDPOINTS = {
   AUTH: {
     SIGNUP: '/v1/auth/signup',
     LOGIN: '/v1/auth/login',
+    GOOGLE_LOGIN: '/v1/auth/google',
     DEVICE_TOKEN: '/v1/auth/device-token',
     PREFERENCES: '/v1/auth/preferences',
   },

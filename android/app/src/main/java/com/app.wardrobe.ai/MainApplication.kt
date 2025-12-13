@@ -1,4 +1,4 @@
-package com.wardrobeai
+package com.app.wardrobe.ai
 
 import android.app.Application
 import com.facebook.react.PackageList

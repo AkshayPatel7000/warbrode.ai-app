@@ -19,9 +19,14 @@ import { AuthStackParamList } from '../../navigation/types';
 import Container from '../../components/Container';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import ApiService from '../../services/api.service';
+import FirebaseAuthService from '../../services/firebase.service';
 import { setCredentials, setAuthError } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice';
-import type { LoginRequest, SignupRequest } from '../../types/api.types';
+import type {
+  LoginRequest,
+  SignupRequest,
+  GoogleLoginRequest,
+} from '../../types/api.types';
 import type { ApiErrorExtended } from '../../types/error.types';
 import { API_BASE_URL } from '@env';
 
@@ -49,14 +54,106 @@ const AuthScreen = () => {
   const dispatch = useDispatch();
   const [mode, setMode] = useState<AuthMode>('login');
   const [toggleWidth, setToggleWidth] = useState(0);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleModeChange = useCallback((newMode: AuthMode) => {
     setMode(newMode);
   }, []);
 
-  const handleGoogleSignIn = () => {
-    console.log('Google Sign-In');
-    // TODO: Implement Google Sign-In
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      console.log('🔵 Starting Google Sign-In...');
+
+      // Step 1: Sign in with Google via Firebase
+      const { user: firebaseUser, idToken } =
+        await FirebaseAuthService.signInWithGoogle();
+
+      console.log('✅ Firebase user:', firebaseUser.uid, firebaseUser.email);
+
+      // Step 2: Save user to Firestore
+      await FirebaseAuthService.saveUserToFirestore(firebaseUser.uid, {
+        email: firebaseUser.email!,
+        name: firebaseUser.displayName || undefined,
+        photoURL: firebaseUser.photoURL || undefined,
+        provider: 'google',
+      });
+
+      // Step 3: Send Firebase ID token to backend
+      const googleLoginData: GoogleLoginRequest = {
+        idToken,
+        email: firebaseUser.email!,
+        name: firebaseUser.displayName || undefined,
+        photoURL: firebaseUser.photoURL || undefined,
+      };
+
+      const response = await ApiService.googleLogin(googleLoginData);
+
+      if (response.data.success && response.data.user) {
+        const { token, refreshToken, userId, email, name, isNewUser } =
+          response.data.user;
+
+        console.log('✅ Backend authentication successful:', {
+          userId,
+          email,
+          isNewUser,
+        });
+
+        // Step 4: Store credentials in Redux
+        dispatch(
+          setCredentials({
+            token,
+            refreshToken: refreshToken || '',
+          }),
+        );
+
+        // Step 5: Store user info in Redux
+        dispatch(
+          setUser({
+            id: userId,
+            email,
+            name: name || firebaseUser.displayName || email.split('@')[0],
+          }),
+        );
+
+        // Step 6: Show success message
+        showSuccessToast(
+          'Google Sign-In Successful',
+          isNewUser ? 'Welcome to WardrobeAI!' : 'Welcome back!',
+        );
+
+        // Step 7: Navigate to main app
+        if (navigation) {
+          // @ts-ignore
+          navigation.getParent()?.replace('MainTabs');
+        }
+      } else {
+        const errorMessage = response.data.message || 'Google Sign-In failed';
+        dispatch(setAuthError(errorMessage));
+        showErrorToast('Google Sign-In Failed', errorMessage);
+        await FirebaseAuthService.signOut();
+      }
+    } catch (error: any) {
+      console.error('❌ Google Sign-In error:', error);
+
+      let errorMessage = 'Google Sign-In failed. Please try again.';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.userMessage) {
+        errorMessage = error.userMessage;
+      }
+
+      dispatch(setAuthError(errorMessage));
+      showErrorToast('Google Sign-In Failed', errorMessage);
+
+      try {
+        await FirebaseAuthService.signOut();
+      } catch (signOutError) {
+        console.error('❌ Error during cleanup:', signOutError);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -417,6 +514,7 @@ const AuthScreen = () => {
                   provider="google"
                   label="Continue with Google"
                   onPress={handleGoogleSignIn}
+                  loading={googleLoading}
                 />
               </View>
 

@@ -7,8 +7,10 @@ import { ActivityIndicator, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { store, persistor } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
+import AppInitializer from './src/components/AppInitializer';
 import { toastConfig } from './src/config/toastConfig';
 import './global.css';
+
 const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -28,9 +30,11 @@ const App = () => {
           }
           persistor={persistor}
         >
-          <SafeAreaProvider>
-            <RootNavigator />
-          </SafeAreaProvider>
+          <AppInitializer>
+            <SafeAreaProvider>
+              <RootNavigator />
+            </SafeAreaProvider>
+          </AppInitializer>
         </PersistGate>
       </Provider>
       <Toast config={toastConfig} />
