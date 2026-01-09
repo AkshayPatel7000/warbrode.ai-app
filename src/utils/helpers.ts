@@ -1,3 +1,4 @@
+import { store } from '../store';
 import { API_BASE_URL } from '@env';
 
 /**
@@ -54,5 +55,6 @@ export const debounce = <T extends (...args: any[]) => any>(
 };
 
 export const getFullImageUrl = (imageUrl: string): string => {
-  return `${API_BASE_URL}/${imageUrl}`;
+  const BASE_URL = store.getState().settings?.settings?.baseUrl || API_BASE_URL;
+  return `${BASE_URL}/${imageUrl}`;
 };

@@ -1,34 +1,28 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Footprints, Shirt } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
   FlatList,
-  TouchableOpacity,
-  Text,
   ListRenderItem,
   RefreshControl,
-  ActivityIndicator,
+  View,
 } from 'react-native';
-import { Footprints, Shirt } from 'lucide-react-native';
+import Container from '../components/Container';
+import { JeansIcon, ShirtIcon } from '../components/icons/ClothingIcons';
 import {
-  WardrobeHeader,
   CategoryChip,
   ClothingCard,
-  UploadOptionsSheet,
   EmptyWardrobe,
+  UploadOptionsSheet,
+  WardrobeHeader,
 } from '../components/wardrobe';
-import Container from '../components/Container';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import WardrobeScreenSkeleton from '../components/wardrobe/WardrobeScreenSkeleton';
 import { RootStackParamList } from '../navigation/types';
-import {
-  ShirtIcon,
-  TShirtIcon,
-  JeansIcon,
-} from '../components/icons/ClothingIcons';
 import apiService from '../services/api.service';
 import { ClothingItem } from '../types/api.types';
 import { showErrorToast } from '../utils/toast';
-import WardrobeScreenSkeleton from '../components/wardrobe/WardrobeScreenSkeleton';
-import { useNavigation } from '@react-navigation/native';
 
 type WardrobeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -37,7 +31,7 @@ type WardrobeScreenNavigationProp = NativeStackNavigationProp<
 
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: undefined },
-  { id: 'shirts', label: 'Shirts', icon: ShirtIcon },
+  { id: 'shirt', label: 'Shirts', icon: ShirtIcon },
   { id: 't-shirts', label: 'T-Shirts', icon: Shirt },
   { id: 'jeans', label: 'Jeans', icon: JeansIcon },
   { id: 'shoes', label: 'Shoes', icon: Footprints },
@@ -117,7 +111,7 @@ const WardrobeScreen = () => {
   // Initial load
   useEffect(() => {
     fetchClothes(1);
-  }, [selectedCategory]);
+  }, [fetchClothes, selectedCategory]);
 
   // Refresh handler
   const handleRefresh = useCallback(() => {
@@ -218,12 +212,7 @@ const WardrobeScreen = () => {
         {/* )} */}
       </>
     ),
-    [
-      totalItems,
-      clothingItems.length,
-      renderCategoryChip,
-      categoryKeyExtractor,
-    ],
+    [totalItems, renderCategoryChip, categoryKeyExtractor],
   );
 
   const renderEmptyComponent = useCallback(() => {

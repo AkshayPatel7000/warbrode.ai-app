@@ -41,12 +41,11 @@ class ApiService {
   private axiosInstance: AxiosInstance;
 
   constructor() {
+    const baseUrl =
+      store.getState().settings?.settings?.baseUrl || API_BASE_URL;
     // Initialize with default baseURL (will be updated from settings)
     this.axiosInstance = axios.create({
-      baseURL:
-        store.getState().settings?.settings?.baseUrl ||
-        API_BASE_URL ||
-        'http://localhost:3000',
+      baseURL: baseUrl || API_BASE_URL || 'http://localhost:3000',
       timeout: parseInt(API_TIMEOUT, 10) || 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -334,7 +333,7 @@ class ApiService {
     // Use transformRequest to ensure FormData is handled correctly in React Native
     return this.post<UploadResponse>(API_ENDPOINTS.UPLOAD.IMAGE, formData, {
       timeout: 60000, // 60 seconds for file upload
-      transformRequest: (data, headers) => {
+      transformRequest: data => {
         // Return data as-is for FormData
         return data;
       },
@@ -359,14 +358,14 @@ class ApiService {
     console.log('🔧 Blob upload starting...');
     console.log(
       '📍 URL:',
-      `${this.axiosInstance.defaults.baseURL}${API_ENDPOINTS.UPLOAD.IMAGE}`,
+      `${store.getState().settings?.settings?.baseUrl}${API_ENDPOINTS.UPLOAD.IMAGE}`,
     );
     console.log('📁 File URI:', cleanUri);
 
     try {
       const response = await ReactNativeBlobUtil.fetch(
         'POST',
-        `${this.axiosInstance.defaults.baseURL}${API_ENDPOINTS.UPLOAD.IMAGE}`,
+        `${store.getState().settings?.settings?.baseUrl}${API_ENDPOINTS.UPLOAD.IMAGE}`,
         {
           Authorization: token ? `Bearer ${token}` : '',
           'Content-Type': 'multipart/form-data',
