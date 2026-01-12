@@ -1,19 +1,16 @@
 module.exports = {
-  presets: [
-    '@react-native/babel-preset',
-    'nativewind/babel'
-  ],
+  presets: ['@react-native/babel-preset', 'nativewind/babel'],
   plugins: [
     [
-        'module-resolver',
-        {
-          root: ['./'],
-          alias: {
-            'moti/skeleton': 'moti/skeleton/react-native-linear-gradient',
-          },
+      'module-resolver',
+      {
+        root: ['./'],
+        alias: {
+          'moti/skeleton': 'moti/skeleton/react-native-linear-gradient',
         },
-      ],
-    
+      },
+    ],
+
     [
       'module:react-native-dotenv',
       {
@@ -23,7 +20,7 @@ module.exports = {
         allowlist: null,
         safe: false,
         allowUndefined: true,
-      }
+      },
     ],
     'react-native-reanimated/plugin', // Must be last
   ],

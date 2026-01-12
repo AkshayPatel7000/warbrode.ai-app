@@ -1,14 +1,10 @@
 {
   "extends": "@react-native/typescript-config",
   "compilerOptions": {
-    "types": [
-      "@types/node"
-    ],
+    "types": ["@types/node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     }
   },
   "include": [
@@ -17,8 +13,5 @@
     "src/types/**/*.d.ts",
     "nativewind-env.d.ts"
   ],
-  "exclude": [
-    "**/node_modules",
-    "**/Pods"
-  ]
+  "exclude": ["**/node_modules", "**/Pods"]
 }
